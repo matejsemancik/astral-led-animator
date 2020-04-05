@@ -83,7 +83,7 @@ class MainSketch : PApplet() {
             val k1 = knight1.generate(a * 1f, color(0f, 100f, 100f), c)
             val k2 = knight2.generate(b * 1f, color(30f, 100f, 100f), d)
             blend(k1, 0, 0, k1.width, k1.height, 0, 0, width, height, PConstants.ADD)
-            blend(k2, 0, 0, k2.width, k2.height, 0, 0, width, height, PConstants.SUBTRACT)
+            blend(k2, 0, 0, k2.width, k2.height, 0, 0, width, height, PConstants.ADD)
         }
     }
 
