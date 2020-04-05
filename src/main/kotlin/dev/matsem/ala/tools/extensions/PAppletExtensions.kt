@@ -34,7 +34,7 @@ fun PApplet.rotate(vector: PVector) {
 }
 
 fun PApplet.pushPop(block: PApplet.() -> Unit) {
-    pushMatrix()
+    push()
     this.block()
-    popMatrix()
+    pop()
 }
