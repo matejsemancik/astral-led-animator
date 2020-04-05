@@ -1,10 +1,12 @@
 package dev.matsem.ala
 
+import dev.matsem.ala.generators.KnightRiderGenerator
 import dev.matsem.ala.tools.extensions.*
 import dev.matsem.ala.tools.kontrol.KontrolF1
 import processing.core.PApplet
 import processing.core.PConstants
 import processing.core.PGraphics
+import java.io.File
 import kotlin.properties.Delegates
 
 class MainSketch : PApplet() {
@@ -12,6 +14,8 @@ class MainSketch : PApplet() {
     object Config {
         const val LED_WIDTH = 30
         const val LED_HEIGHT = 5
+        const val SPACE = 0
+        const val SIZE = 10f
     }
 
     private val kontrol = KontrolF1()
@@ -23,19 +27,21 @@ class MainSketch : PApplet() {
     private var canvasWidth: Int by Delegates.vetoable(initialValue = Config.LED_WIDTH) { _, oldVal, newVal ->
         val hasChanged = oldVal != newVal
         if (hasChanged) {
-            canvas = createGraphics(newVal, canvasHeight, PConstants.P3D)
+            createObjects(newVal, canvasHeight)
         }
         hasChanged
     }
     private var canvasHeight: Int by Delegates.vetoable(initialValue = Config.LED_HEIGHT) { _, oldVal, newVal ->
         val hasChanged = oldVal != newVal
         if (hasChanged) {
-            canvas = createGraphics(canvasWidth, newVal, PConstants.P3D)
+            createObjects(canvasWidth, newVal)
         }
         hasChanged
     }
 
     private lateinit var canvas: PGraphics
+    private lateinit var knight1: KnightRiderGenerator
+    private lateinit var knight2: KnightRiderGenerator
 
     override fun settings() {
         size(1280, 720, PConstants.P3D)
@@ -45,8 +51,14 @@ class MainSketch : PApplet() {
         surface.setTitle("Astral LED Animator")
         surface.setResizable(true)
         colorMode(PConstants.HSB, 360f, 100f, 100f, 100f)
+        createObjects(canvasWidth, canvasHeight)
         kontrol.connect()
-        canvas = createGraphics(canvasWidth, canvasHeight, PConstants.P3D)
+    }
+
+    private fun createObjects(w: Int, h: Int) {
+        canvas = createGraphics(w, h, PConstants.P2D)
+        knight1 = KnightRiderGenerator(this, w, h)
+        knight2 = KnightRiderGenerator(this, w, h)
     }
 
     override fun draw() {
@@ -58,30 +70,27 @@ class MainSketch : PApplet() {
         background(0f, 0f, 10f)
         renderCanvas()
         drawOutput()
+
+        pushPop {
+            image(canvas, 0f, 0f)
+        }
     }
 
     private fun renderCanvas() = canvas.apply {
+        colorMode(PConstants.HSB, 360f, 100f, 100f, 100f)
         draw {
-            colorMode(PConstants.HSB, 360f, 100f, 100f)
-            stroke(0)
-            strokeWeight(2f)
-            fill(160f, 100f, 100f)
             clear()
-            background(0)
-            pushPop {
-                translateCenter()
-                rotateX(angularTimeS(10f))
-                rotateY(angularTimeS(20f))
-                rotateZ(angularTimeS(30f))
-                box(shorterDimension() / 2f)
-            }
+            val k1 = knight1.generate(a * 1f, color(0f, 100f, 100f), c)
+            val k2 = knight2.generate(b * 1f, color(30f, 100f, 100f), d)
+            blend(k1, 0, 0, k1.width, k1.height, 0, 0, width, height, PConstants.ADD)
+            blend(k2, 0, 0, k2.width, k2.height, 0, 0, width, height, PConstants.SUBTRACT)
         }
     }
 
     private fun drawOutput() {
         pushPop {
-            val cellSize = (c * 10f)
-            val space = (d * 5f).toInt()
+            val cellSize = Config.SIZE
+            val space = Config.SPACE
             val drawnWidth = canvasWidth * cellSize + canvasWidth * space
             val drawnHeight = canvasHeight * cellSize + canvasHeight * space
 
@@ -101,5 +110,21 @@ class MainSketch : PApplet() {
                 }
             }
         }
+    }
+
+    /**
+     * Sketch data path override. It's wrong when using local Processing installation core jars.
+     * Sketch folder path cannot be passed as an argument, does not play well with DI.
+     */
+    override fun dataPath(where: String): String {
+        return System.getProperty("user.dir") + "/data/" + where
+    }
+
+    /**
+     * Sketch data path override. It's wrong when using local Processing installation core jars.
+     * Sketch folder path cannot be passed as an argument, does not play well with DI.
+     */
+    override fun dataFile(where: String): File {
+        return File(System.getProperty("user.dir") + "/data/" + where)
     }
 }
