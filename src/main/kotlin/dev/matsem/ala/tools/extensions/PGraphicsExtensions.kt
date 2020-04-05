@@ -21,3 +21,9 @@ fun PGraphics.pushPop(block: PGraphics.() -> Unit) {
     this.block()
     popMatrix()
 }
+
+fun PGraphics.draw(block: PGraphics.() -> Unit) {
+    beginDraw()
+    this.block()
+    endDraw()
+}
