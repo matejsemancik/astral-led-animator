@@ -51,7 +51,7 @@ class MainSketch : PApplet() {
         d = kontrol.knob4.midiRange(1f)
 
         canvasWidth = (a * 150).toInt().constrain(low = 1)
-        canvasHeight = (b * 10f).toInt().constrain(low = 1)
+        canvasHeight = (b * 150f).toInt().constrain(low = 1)
 
         background(0f, 0f, 10f)
 
@@ -76,14 +76,17 @@ class MainSketch : PApplet() {
                 rotateX(angularTimeS(10f))
                 rotateY(angularTimeS(20f))
                 rotateZ(angularTimeS(30f))
-                box(longerDimension() / 2f)
+                box(shorterDimension() / 2f)
             }
         }
     }
 
     private fun drawOutput() {
         pushPop {
-            val size = (c * 10f)
+            val cellSize = (c * 10f)
+            val space = (d * 5f).toInt()
+            val drawnWidth = canvasWidth * cellSize + canvasWidth * space
+            val drawnHeight = canvasHeight * cellSize + canvasHeight * space
 
             translateCenter()
             rectMode(PConstants.CORNER)
@@ -94,9 +97,9 @@ class MainSketch : PApplet() {
                 for (y in 0 until canvasHeight) {
                     fill(canvas.pixelAt(x, y))
                     square(
-                        x.toFloat() * size - canvasWidth * size / 2f,
-                        y.toFloat() * size - canvasHeight * size / 2f,
-                        size - 2
+                        (x.toFloat() * cellSize + space * x) - drawnWidth / 2f,
+                        (y.toFloat() * cellSize + space * y) - drawnHeight / 2f,
+                        cellSize
                     )
                 }
             }
