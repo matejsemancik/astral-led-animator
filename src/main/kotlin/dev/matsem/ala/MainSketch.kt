@@ -9,20 +9,25 @@ import kotlin.properties.Delegates
 
 class MainSketch : PApplet() {
 
+    object Config {
+        const val LED_WIDTH = 30
+        const val LED_HEIGHT = 5
+    }
+
     private val kontrol = KontrolF1()
     private var a = 0f
     private var b = 0f
     private var c = 0f
     private var d = 0f
 
-    private var canvasWidth: Int by Delegates.vetoable(initialValue = 30) { _, oldVal, newVal ->
+    private var canvasWidth: Int by Delegates.vetoable(initialValue = Config.LED_WIDTH) { _, oldVal, newVal ->
         val hasChanged = oldVal != newVal
         if (hasChanged) {
             canvas = createGraphics(newVal, canvasHeight, PConstants.P3D)
         }
         hasChanged
     }
-    private var canvasHeight: Int by Delegates.vetoable(initialValue = 5) { _, oldVal, newVal ->
+    private var canvasHeight: Int by Delegates.vetoable(initialValue = Config.LED_HEIGHT) { _, oldVal, newVal ->
         val hasChanged = oldVal != newVal
         if (hasChanged) {
             canvas = createGraphics(canvasWidth, newVal, PConstants.P3D)
@@ -50,17 +55,9 @@ class MainSketch : PApplet() {
         c = kontrol.knob3.midiRange(1f)
         d = kontrol.knob4.midiRange(1f)
 
-        canvasWidth = (a * 150).toInt().constrain(low = 1)
-        canvasHeight = (b * 150f).toInt().constrain(low = 1)
-
         background(0f, 0f, 10f)
-
         renderCanvas()
         drawOutput()
-
-        pushPop {
-            image(canvas, 0f, 0f)
-        }
     }
 
     private fun renderCanvas() = canvas.apply {
