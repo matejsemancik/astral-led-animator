@@ -12,9 +12,9 @@ import kotlin.properties.Delegates
 class MainSketch : PApplet() {
 
     object Config {
-        const val LED_WIDTH = 30
+        const val LED_WIDTH = 60
         const val LED_HEIGHT = 5
-        const val SPACE = 0
+        const val SPACE = 2
         const val SIZE = 10f
     }
 
@@ -80,9 +80,7 @@ class MainSketch : PApplet() {
         colorMode(PConstants.HSB, 360f, 100f, 100f, 100f)
         draw {
             clear()
-            val k1 = knight1.generate(a * 1f, color(0f, 100f, 100f), c)
-            val k2 = knight2.generate(b * 1f, color(30f, 100f, 100f), d)
-            blend(k1, 0, 0, k1.width, k1.height, 0, 0, width, height, PConstants.ADD)
+            val k2 = knight2.generate(fHz = a * 2f, w = (b * 8).toInt(), color = color(30f, 100f, 100f), fading = c)
             blend(k2, 0, 0, k2.width, k2.height, 0, 0, width, height, PConstants.ADD)
         }
     }
