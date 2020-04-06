@@ -3,6 +3,7 @@ package dev.matsem.ala
 import dev.matsem.ala.generators.KnightRiderGenerator
 import dev.matsem.ala.tools.extensions.*
 import dev.matsem.ala.tools.kontrol.KontrolF1
+import dev.matsem.ala.tools.patch.ArtnetPatch
 import processing.core.PApplet
 import processing.core.PConstants
 import processing.core.PGraphics
@@ -12,7 +13,7 @@ import kotlin.properties.Delegates
 class MainSketch : PApplet() {
 
     object Config {
-        const val LED_WIDTH = 60
+        const val LED_WIDTH = 30
         const val LED_HEIGHT = 5
         const val SPACE = 2
         const val SIZE = 10f
@@ -40,6 +41,7 @@ class MainSketch : PApplet() {
     }
 
     private lateinit var canvas: PGraphics
+    private lateinit var patch: ArtnetPatch
     private lateinit var knight1: KnightRiderGenerator
     private lateinit var knight2: KnightRiderGenerator
 
@@ -53,6 +55,11 @@ class MainSketch : PApplet() {
         colorMode(PConstants.HSB, 360f, 100f, 100f, 100f)
         createObjects(canvasWidth, canvasHeight)
         kontrol.connect()
+
+        patch = ArtnetPatch(Config.LED_WIDTH, Config.LED_HEIGHT).apply {
+            patch(0 until Config.LED_WIDTH, 0 until Config.LED_HEIGHT, ArtnetPatch.Direction.SNAKE_NE, 0, 0)
+        }
+        println(patch.toString())
     }
 
     private fun createObjects(w: Int, h: Int) {
