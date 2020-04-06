@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     kotlin("jvm") version "1.3.61"
     application
@@ -38,4 +40,9 @@ tasks {
     compileTestKotlin {
         kotlinOptions.jvmTarget = "1.8"
     }
+}
+
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.kotlinOptions {
+    freeCompilerArgs = listOf("-Xinline-classes")
 }
