@@ -104,7 +104,7 @@ class MainSketch : PApplet() {
         draw {
             clear()
             val k1 = knight1.generate(color = color(a1.remap(0f, 1f, 0f, 360f), 100f, 100f), fHz = b1 * 3f, w = (c1 * 8).toInt(), fading = d1)
-            val k2 = knight2.generate(color = color(a1.remap(0f, 1f, 0f, 360f), 100f, 100f), fHz = b1 * 3f, w = (c1 * 8).toInt(), fading = d1)
+            val k2 = knight2.generate(color = color(a2.remap(0f, 1f, 0f, 360f), 100f, 100f), fHz = b2 * 3f, w = (c2 * 8).toInt(), fading = d2)
             blend(k1, 0, 0, k1.width, k1.height, 0, 0, width, height, PConstants.ADD)
             blend(k2, 0, 0, k2.width, k2.height, 0, 0, width, height, PConstants.ADD)
         }
