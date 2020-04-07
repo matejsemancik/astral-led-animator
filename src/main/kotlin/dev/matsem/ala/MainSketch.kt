@@ -1,9 +1,10 @@
 package dev.matsem.ala
 
+import ch.bildspur.artnet.ArtNetClient
 import dev.matsem.ala.generators.KnightRiderGenerator
+import dev.matsem.ala.tools.dmx.ArtnetPatch
 import dev.matsem.ala.tools.extensions.*
 import dev.matsem.ala.tools.kontrol.KontrolF1
-import dev.matsem.ala.tools.patch.ArtnetPatch
 import processing.core.PApplet
 import processing.core.PConstants
 import processing.core.PGraphics
@@ -17,13 +18,18 @@ class MainSketch : PApplet() {
         const val LED_HEIGHT = 5
         const val SPACE = 2
         const val SIZE = 10f
+        const val NODE_IP = "192.168.1.18"
     }
 
     private val kontrol = KontrolF1()
-    private var a = 0f
-    private var b = 0f
-    private var c = 0f
-    private var d = 0f
+    private var a1 = 0f
+    private var b1 = 0f
+    private var c1 = 0f
+    private var d1 = 0f
+    private var a2 = 0f
+    private var b2 = 0f
+    private var c2 = 0f
+    private var d2 = 0f
 
     private var canvasWidth: Int by Delegates.vetoable(initialValue = Config.LED_WIDTH) { _, oldVal, newVal ->
         val hasChanged = oldVal != newVal
@@ -44,6 +50,7 @@ class MainSketch : PApplet() {
     private lateinit var patch: ArtnetPatch
     private lateinit var knight1: KnightRiderGenerator
     private lateinit var knight2: KnightRiderGenerator
+    private lateinit var artnetClient: ArtNetClient
 
     override fun settings() {
         size(1280, 720, PConstants.P3D)
@@ -52,9 +59,13 @@ class MainSketch : PApplet() {
     override fun setup() {
         surface.setTitle("Astral LED Animator")
         surface.setResizable(true)
-        colorMode(PConstants.HSB, 360f, 100f, 100f, 100f)
-        createObjects(canvasWidth, canvasHeight)
+
         kontrol.connect()
+        artnetClient = ArtNetClient().apply { start() }
+
+        colorMode(PConstants.HSB, 360f, 100f, 100f, 100f)
+
+        createObjects(canvasWidth, canvasHeight)
 
         patch = ArtnetPatch(Config.LED_WIDTH, Config.LED_HEIGHT).apply {
             patch(0 until Config.LED_WIDTH, 0 until Config.LED_HEIGHT, ArtnetPatch.Direction.SNAKE_NE, 0, 0)
@@ -69,14 +80,19 @@ class MainSketch : PApplet() {
     }
 
     override fun draw() {
-        a = kontrol.knob1.midiRange(1f)
-        b = kontrol.knob2.midiRange(1f)
-        c = kontrol.knob3.midiRange(1f)
-        d = kontrol.knob4.midiRange(1f)
+        a1 = kontrol.knob1.midiRange(1f)
+        b1 = kontrol.knob2.midiRange(1f)
+        c1 = kontrol.knob3.midiRange(1f)
+        d1 = kontrol.knob4.midiRange(1f)
+        a2 = kontrol.slider1.midiRange(1f)
+        b2 = kontrol.slider2.midiRange(1f)
+        c2 = kontrol.slider3.midiRange(1f)
+        d2 = kontrol.slider4.midiRange(1f)
 
         background(0f, 0f, 10f)
         renderCanvas()
         drawOutput()
+        sendData()
 
         pushPop {
             image(canvas, 0f, 0f)
@@ -87,7 +103,9 @@ class MainSketch : PApplet() {
         colorMode(PConstants.HSB, 360f, 100f, 100f, 100f)
         draw {
             clear()
-            val k2 = knight2.generate(fHz = a * 2f, w = (b * 8).toInt(), color = color(30f, 100f, 100f), fading = c)
+            val k1 = knight1.generate(color = color(a1.remap(0f, 1f, 0f, 360f), 100f, 100f), fHz = b1 * 3f, w = (c1 * 8).toInt(), fading = d1)
+            val k2 = knight2.generate(color = color(a1.remap(0f, 1f, 0f, 360f), 100f, 100f), fHz = b1 * 3f, w = (c1 * 8).toInt(), fading = d1)
+            blend(k1, 0, 0, k1.width, k1.height, 0, 0, width, height, PConstants.ADD)
             blend(k2, 0, 0, k2.width, k2.height, 0, 0, width, height, PConstants.ADD)
         }
     }
@@ -114,6 +132,13 @@ class MainSketch : PApplet() {
                     )
                 }
             }
+        }
+    }
+
+    private fun sendData() {
+        patch.scan(canvas)
+        patch.universeData.forEach { (universe, byteArray) ->
+            artnetClient.unicastDmx(Config.NODE_IP, 0, universe, byteArray)
         }
     }
 
