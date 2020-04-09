@@ -19,6 +19,7 @@ class MainSketch : PApplet() {
         const val SPACE = 2
         const val SIZE = 10f
         const val NODE_IP = "192.168.1.18"
+        const val OUTPUT_ENABLED = false
     }
 
     private val kontrol = KontrolF1()
@@ -59,6 +60,10 @@ class MainSketch : PApplet() {
     override fun setup() {
         surface.setTitle("Astral LED Animator")
         surface.setResizable(true)
+        surface.setSize(
+            (canvasWidth * Config.SIZE + canvasWidth * Config.SPACE).toInt() + 200,
+            (canvasHeight * Config.SIZE + canvasHeight * Config.SPACE).toInt() + 200
+        )
 
         kontrol.connect()
         artnetClient = ArtNetClient().apply { start() }
@@ -92,7 +97,9 @@ class MainSketch : PApplet() {
         background(0f, 0f, 10f)
         renderCanvas()
         drawOutput()
-        sendData()
+        if (Config.OUTPUT_ENABLED) {
+            sendData()
+        }
 
         pushPop {
             image(canvas, 0f, 0f)
@@ -103,8 +110,18 @@ class MainSketch : PApplet() {
         colorMode(PConstants.HSB, 360f, 100f, 100f, 100f)
         draw {
             clear()
-            val k1 = knight1.generate(color = color(a1.remap(0f, 1f, 0f, 360f), 100f, 100f), fHz = b1 * 3f, w = (c1 * 8).toInt(), fading = d1)
-            val k2 = knight2.generate(color = color(a2.remap(0f, 1f, 0f, 360f), 100f, 100f), fHz = b2 * 3f, w = (c2 * 8).toInt(), fading = d2)
+            val k1 = knight1.generate(
+                fHz = b1 * 20f,
+                beamWidth = c1.mapp(1f, width.toFloat()).toInt().constrain(low = 1),
+                color = color(a1.remap(0f, 1f, 0f, 360f), 100f, 100f),
+                fading = d1
+            )
+            val k2 = knight2.generate(
+                fHz = b2 * 20f,
+                beamWidth = (c2 * width.toFloat()).toInt().constrain(low = 1),
+                color = color(a2.remap(0f, 1f, 0f, 360f), 100f, 100f),
+                fading = d2
+            )
             blend(k1, 0, 0, k1.width, k1.height, 0, 0, width, height, PConstants.ADD)
             blend(k2, 0, 0, k2.width, k2.height, 0, 0, width, height, PConstants.ADD)
         }
