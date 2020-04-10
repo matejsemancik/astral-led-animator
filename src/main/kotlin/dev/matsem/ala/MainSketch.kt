@@ -123,15 +123,14 @@ class MainSketch : PApplet() {
         colorMode(PConstants.HSB, 360f, 100f, 100f, 100f)
         draw {
             clear()
-            val l1 = laser1.generate(
+            val g = knight1.generate(
                 fHz = a1 * 20f,
                 amplitude = b1 * 2f,
                 beamWidth = c1.mapp(1f, width.toFloat()).toInt().constrain(low = 1),
                 color = color(0f, 0f, 100f),
-                fading = d1,
-                mod = (a2 * height).toInt().constrain(low = 1)
+                fading = d1
             )
-            blend(l1, 0, 0, l1.width, l1.height, 0, 0, width, height, PConstants.ADD)
+            blend(g, 0, 0, g.width, g.height, 0, 0, width, height, PConstants.ADD)
         }
     }
 

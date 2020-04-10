@@ -16,13 +16,20 @@ class KnightRiderGenerator(private val sketch: PApplet, w: Int, h: Int, private 
             oscil.setFrequency(new)
         }
     }
+    private var amplitudeInternal: Float by Delegates.observable(1f) {_, old, new ->
+        if (new != old) {
+            oscil.setAmplitude(new)
+        }
+    }
     private val canvas = sketch.createGraphics(w, h, PConstants.P2D)
-    private val oscil = Oscil(fHzInternal, 1f, Waves.SINE).apply { patch(sink) }
+    private val oscil = Oscil(fHzInternal, 1f, Waves.TRIANGLE).apply { patch(sink) }
 
     override fun destroy() = oscil.unpatch(sink)
 
-    fun generate(fHz: Float, beamWidth: Int, color: Int, fading: Float): PGraphics {
+    fun generate(fHz: Float, amplitude: Float, beamWidth: Int, color: Int, fading: Float): PGraphics {
         fHzInternal = fHz
+        amplitudeInternal = amplitude
+
         canvas.noSmooth()
         canvas.draw {
             colorModeHSB()
