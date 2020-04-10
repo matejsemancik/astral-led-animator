@@ -54,7 +54,7 @@ class MainSketch : PApplet() {
     // Minim, oscillators, audio stuff
     private val minim = Minim(this)
     private val lineOut = minim.lineOut
-    private val sink = Sink()
+    private val sink = Sink().apply { patch(lineOut) }
 
     // Art-Net stuff
     private val artnetClient = ArtNetClient().apply { start() }
@@ -78,16 +78,19 @@ class MainSketch : PApplet() {
             (canvasHeight * Config.SIZE + canvasHeight * Config.SPACE).toInt() + 200
         )
 
-        colorMode(PConstants.HSB, 360f, 100f, 100f, 100f)
+        colorModeHSB()
         createObjects(canvasWidth, canvasHeight)
         println(artnetPatch.toString())
     }
 
     private fun createObjects(w: Int, h: Int) {
         canvas = createGraphics(w, h, PConstants.P2D)
-        knight1 = KnightRiderGenerator(this, w, h)
-        knight2 = KnightRiderGenerator(this, w, h)
-        strobe1 = StrobeGenerator(this, w, h)
+        if (::knight1.isInitialized) knight1.destroy()
+        knight1 = KnightRiderGenerator(this, w, h, sink)
+        if (::knight2.isInitialized) knight2.destroy()
+        knight2 = KnightRiderGenerator(this, w, h, sink)
+        if (::strobe1.isInitialized) strobe1.destroy()
+        strobe1 = StrobeGenerator(this, w, h, sink)
     }
 
     override fun draw() {

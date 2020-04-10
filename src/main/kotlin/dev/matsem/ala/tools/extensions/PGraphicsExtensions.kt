@@ -1,5 +1,6 @@
 package dev.matsem.ala.tools.extensions
 
+import processing.core.PApplet
 import processing.core.PGraphics
 import kotlin.math.max
 import kotlin.math.min
@@ -44,3 +45,5 @@ fun PGraphics.fadeToBlackBy(fadeAmount: Float) {
     }
     updatePixels()
 }
+
+fun PGraphics.colorModeHSB() = colorMode(PApplet.HSB, 360f, 100f, 100f, 100f)

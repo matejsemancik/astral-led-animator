@@ -30,3 +30,5 @@ fun PApplet.pushPop(block: PApplet.() -> Unit) {
     this.block()
     pop()
 }
+
+fun PApplet.colorModeHSB() = colorMode(PApplet.HSB, 360f, 100f, 100f, 100f)
