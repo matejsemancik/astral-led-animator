@@ -2,6 +2,7 @@ package dev.matsem.ala
 
 import ch.bildspur.artnet.ArtNetClient
 import dev.matsem.ala.generators.KnightRiderGenerator
+import dev.matsem.ala.generators.StrobeGenerator
 import dev.matsem.ala.tools.dmx.ArtnetPatch
 import dev.matsem.ala.tools.extensions.*
 import dev.matsem.ala.tools.kontrol.KontrolF1
@@ -51,6 +52,8 @@ class MainSketch : PApplet() {
     private lateinit var patch: ArtnetPatch
     private lateinit var knight1: KnightRiderGenerator
     private lateinit var knight2: KnightRiderGenerator
+    private lateinit var strobe1: StrobeGenerator
+
     private lateinit var artnetClient: ArtNetClient
 
     override fun settings() {
@@ -82,6 +85,7 @@ class MainSketch : PApplet() {
         canvas = createGraphics(w, h, PConstants.P2D)
         knight1 = KnightRiderGenerator(this, w, h)
         knight2 = KnightRiderGenerator(this, w, h)
+        strobe1 = StrobeGenerator(this, w, h)
     }
 
     override fun draw() {
@@ -116,14 +120,12 @@ class MainSketch : PApplet() {
                 color = color(a1.remap(0f, 1f, 0f, 360f), 100f, 100f),
                 fading = d1
             )
-            val k2 = knight2.generate(
-                fHz = b2 * 20f,
-                beamWidth = (c2 * width.toFloat()).toInt().constrain(low = 1),
-                color = color(a2.remap(0f, 1f, 0f, 360f), 100f, 100f),
-                fading = d2
+            val s1 = strobe1.generate(
+                fHz = b2 * 10f,
+                color = color(0f, 0f, 0f)
             )
             blend(k1, 0, 0, k1.width, k1.height, 0, 0, width, height, PConstants.ADD)
-            blend(k2, 0, 0, k2.width, k2.height, 0, 0, width, height, PConstants.ADD)
+            blend(s1, 0, 0, s1.width, s1.height, 0, 0, width, height, PConstants.MULTIPLY)
         }
     }
 
