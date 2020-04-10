@@ -4,6 +4,7 @@ import ch.bildspur.artnet.ArtNetClient
 import ddf.minim.Minim
 import ddf.minim.ugens.Sink
 import dev.matsem.ala.generators.KnightRiderGenerator
+import dev.matsem.ala.generators.LaserGenerator
 import dev.matsem.ala.generators.StrobeGenerator
 import dev.matsem.ala.tools.dmx.ArtnetPatch
 import dev.matsem.ala.tools.extensions.*
@@ -17,8 +18,8 @@ import kotlin.properties.Delegates
 class MainSketch : PApplet() {
 
     object Config {
-        const val LED_WIDTH = 30
-        const val LED_HEIGHT = 5
+        const val LED_WIDTH = 150
+        const val LED_HEIGHT = 6
         const val SPACE = 2
         const val SIZE = 10f
         const val NODE_IP = "192.168.1.18"
@@ -67,6 +68,7 @@ class MainSketch : PApplet() {
     private lateinit var knight1: KnightRiderGenerator
     private lateinit var knight2: KnightRiderGenerator
     private lateinit var strobe1: StrobeGenerator
+    private lateinit var laser1: LaserGenerator
 
     override fun settings() = size(1280, 720, PConstants.P3D)
 
@@ -91,6 +93,8 @@ class MainSketch : PApplet() {
         knight2 = KnightRiderGenerator(this, w, h, sink)
         if (::strobe1.isInitialized) strobe1.destroy()
         strobe1 = StrobeGenerator(this, w, h, sink)
+        if (::laser1.isInitialized) laser1.destroy()
+        laser1 = LaserGenerator(this, w, h, sink)
     }
 
     override fun draw() {
@@ -119,18 +123,15 @@ class MainSketch : PApplet() {
         colorMode(PConstants.HSB, 360f, 100f, 100f, 100f)
         draw {
             clear()
-            val k1 = knight1.generate(
-                fHz = b1 * 20f,
+            val l1 = laser1.generate(
+                fHz = a1 * 20f,
+                amplitude = b1 * 2f,
                 beamWidth = c1.mapp(1f, width.toFloat()).toInt().constrain(low = 1),
-                color = color(a1.remap(0f, 1f, 0f, 360f), 100f, 100f),
-                fading = d1
+                color = color(0f, 0f, 100f),
+                fading = d1,
+                mod = (a2 * height).toInt().constrain(low = 1)
             )
-            val s1 = strobe1.generate(
-                fHz = b2 * 10f,
-                color = color(0f, 0f, 0f)
-            )
-            blend(k1, 0, 0, k1.width, k1.height, 0, 0, width, height, PConstants.ADD)
-            blend(s1, 0, 0, s1.width, s1.height, 0, 0, width, height, PConstants.MULTIPLY)
+            blend(l1, 0, 0, l1.width, l1.height, 0, 0, width, height, PConstants.ADD)
         }
     }
 
