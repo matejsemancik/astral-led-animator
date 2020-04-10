@@ -1,6 +1,9 @@
 package dev.matsem.ala
 
 import ch.bildspur.artnet.ArtNetClient
+import ddf.minim.AudioOutput
+import ddf.minim.Minim
+import ddf.minim.ugens.Sink
 import dev.matsem.ala.generators.KnightRiderGenerator
 import dev.matsem.ala.generators.StrobeGenerator
 import dev.matsem.ala.tools.dmx.ArtnetPatch
@@ -23,7 +26,7 @@ class MainSketch : PApplet() {
         const val OUTPUT_ENABLED = false
     }
 
-    private val kontrol = KontrolF1()
+    private val kontrol = KontrolF1().apply { connect() }
     private var a1 = 0f
     private var b1 = 0f
     private var c1 = 0f
@@ -48,17 +51,20 @@ class MainSketch : PApplet() {
         hasChanged
     }
 
+    private lateinit var minim: Minim
+    private lateinit var lineOut: AudioOutput
+    private val sink = Sink()
     private lateinit var canvas: PGraphics
-    private lateinit var patch: ArtnetPatch
     private lateinit var knight1: KnightRiderGenerator
     private lateinit var knight2: KnightRiderGenerator
     private lateinit var strobe1: StrobeGenerator
 
-    private lateinit var artnetClient: ArtNetClient
-
-    override fun settings() {
-        size(1280, 720, PConstants.P3D)
+    private val artnetClient = ArtNetClient().apply { start() }
+    private val artnetPatch = ArtnetPatch(Config.LED_WIDTH, Config.LED_HEIGHT).apply {
+        patch(0 until patchWidth, 0 until patchHeight, ArtnetPatch.Direction.SNAKE_NE, 0, 0)
     }
+
+    override fun settings() = size(1280, 720, PConstants.P3D)
 
     override fun setup() {
         surface.setTitle("Astral LED Animator")
@@ -68,17 +74,9 @@ class MainSketch : PApplet() {
             (canvasHeight * Config.SIZE + canvasHeight * Config.SPACE).toInt() + 200
         )
 
-        kontrol.connect()
-        artnetClient = ArtNetClient().apply { start() }
-
         colorMode(PConstants.HSB, 360f, 100f, 100f, 100f)
-
         createObjects(canvasWidth, canvasHeight)
-
-        patch = ArtnetPatch(Config.LED_WIDTH, Config.LED_HEIGHT).apply {
-            patch(0 until Config.LED_WIDTH, 0 until Config.LED_HEIGHT, ArtnetPatch.Direction.SNAKE_NE, 0, 0)
-        }
-        println(patch.toString())
+        println(artnetPatch.toString())
     }
 
     private fun createObjects(w: Int, h: Int) {
@@ -154,9 +152,9 @@ class MainSketch : PApplet() {
         }
     }
 
-    private fun sendData() {
-        patch.scan(canvas)
-        patch.universeData.forEach { (universe, byteArray) ->
+    private fun sendData() = with(artnetPatch) {
+        scan(canvas)
+        universeData.forEach { (universe, byteArray) ->
             artnetClient.unicastDmx(Config.NODE_IP, 0, universe, byteArray)
         }
     }

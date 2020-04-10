@@ -15,7 +15,7 @@ inline class UniverseToPixelChannels(val value: Pair<Int, PixelChannels>) {
     override fun toString() = "${value.first}: ${value.second}"
 }
 
-class ArtnetPatch(width: Int, height: Int) {
+class ArtnetPatch(val patchWidth: Int, val patchHeight: Int) {
 
     enum class Direction {
         /**
@@ -24,8 +24,8 @@ class ArtnetPatch(width: Int, height: Int) {
         SNAKE_NE
     }
 
-    private val patchMatrix = Array(height) {
-        Array<UniverseToPixelChannels?>(width) { null }
+    private val patchMatrix = Array(patchHeight) {
+        Array<UniverseToPixelChannels?>(patchWidth) { null }
     }
 
     val universeData = HashMap<Int, ByteArray>()
