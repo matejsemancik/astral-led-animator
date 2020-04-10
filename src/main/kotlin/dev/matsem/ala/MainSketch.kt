@@ -1,7 +1,6 @@
 package dev.matsem.ala
 
 import ch.bildspur.artnet.ArtNetClient
-import ddf.minim.AudioOutput
 import ddf.minim.Minim
 import ddf.minim.ugens.Sink
 import dev.matsem.ala.generators.KnightRiderGenerator
@@ -26,16 +25,6 @@ class MainSketch : PApplet() {
         const val OUTPUT_ENABLED = false
     }
 
-    private val kontrol = KontrolF1().apply { connect() }
-    private var a1 = 0f
-    private var b1 = 0f
-    private var c1 = 0f
-    private var d1 = 0f
-    private var a2 = 0f
-    private var b2 = 0f
-    private var c2 = 0f
-    private var d2 = 0f
-
     private var canvasWidth: Int by Delegates.vetoable(initialValue = Config.LED_WIDTH) { _, oldVal, newVal ->
         val hasChanged = oldVal != newVal
         if (hasChanged) {
@@ -51,18 +40,33 @@ class MainSketch : PApplet() {
         hasChanged
     }
 
-    private lateinit var minim: Minim
-    private lateinit var lineOut: AudioOutput
-    private val sink = Sink()
-    private lateinit var canvas: PGraphics
-    private lateinit var knight1: KnightRiderGenerator
-    private lateinit var knight2: KnightRiderGenerator
-    private lateinit var strobe1: StrobeGenerator
+    // Kontrol F1 MIDI controller stuff
+    private val kontrol = KontrolF1().apply { connect() }
+    private var a1 = 0f
+    private var b1 = 0f
+    private var c1 = 0f
+    private var d1 = 0f
+    private var a2 = 0f
+    private var b2 = 0f
+    private var c2 = 0f
+    private var d2 = 0f
 
+    // Minim, oscillators, audio stuff
+    private val minim = Minim(this)
+    private val lineOut = minim.lineOut
+    private val sink = Sink()
+
+    // Art-Net stuff
     private val artnetClient = ArtNetClient().apply { start() }
     private val artnetPatch = ArtnetPatch(Config.LED_WIDTH, Config.LED_HEIGHT).apply {
         patch(0 until patchWidth, 0 until patchHeight, ArtnetPatch.Direction.SNAKE_NE, 0, 0)
     }
+
+    // Core stuff
+    private lateinit var canvas: PGraphics
+    private lateinit var knight1: KnightRiderGenerator
+    private lateinit var knight2: KnightRiderGenerator
+    private lateinit var strobe1: StrobeGenerator
 
     override fun settings() = size(1280, 720, PConstants.P3D)
 
