@@ -21,7 +21,7 @@ class StrobeGenerator(private val sketch: PApplet, w: Int, h: Int, private val s
     private val oscil = Oscil(fHzInternal, 1f, Waves.SINE).apply { patch(sink) }
     private val canvas = sketch.createGraphics(w, h, PConstants.P2D)
 
-    override fun destroy() = oscil.unpatch(sink)
+    override fun unpatch() = oscil.unpatch(sink)
 
     fun generate(fHz: Float, color: Int): PGraphics {
         fHzInternal = fHz

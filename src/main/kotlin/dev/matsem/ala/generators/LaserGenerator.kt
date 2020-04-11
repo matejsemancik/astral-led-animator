@@ -24,7 +24,7 @@ class LaserGenerator(private val sketch: PApplet, w: Int, h: Int, private val si
     private val canvas = sketch.createGraphics(w, h, PConstants.P2D)
     private val oscil = Oscil(fHzInternal, 1f, Waves.SAW).apply { patch(sink) }
 
-    override fun destroy() = oscil.unpatch(sink)
+    override fun unpatch() = oscil.unpatch(sink)
 
     fun generate(fHz: Float, amplitude: Float, beamWidth: Int, color: Int, fading: Float, mod: Int): PGraphics {
         fHzInternal = fHz

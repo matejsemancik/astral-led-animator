@@ -41,7 +41,7 @@ class MainSketch : PApplet() {
         hasChanged
     }
 
-    // Kontrol F1 MIDI controller stuff
+    // region Kontrol F1 MIDI controller stuff
     private val kontrol = KontrolF1().apply { connect() }
     private var a1 = 0f
     private var b1 = 0f
@@ -51,24 +51,40 @@ class MainSketch : PApplet() {
     private var b2 = 0f
     private var c2 = 0f
     private var d2 = 0f
+    // endregion
 
-    // Minim, oscillators, audio stuff
+    // region Minim, oscillators, audio stuff
     private val minim = Minim(this)
     private val lineOut = minim.lineOut
     private val sink = Sink().apply { patch(lineOut) }
+    // endregion
 
-    // Art-Net stuff
+    // region Art-Net stuff
     private val artnetClient = ArtNetClient().apply { start() }
     private val artnetPatch = ArtnetPatch(Config.LED_WIDTH, Config.LED_HEIGHT).apply {
         patch(0 until patchWidth, 0 until patchHeight, ArtnetPatch.Direction.SNAKE_NE, 0, 0)
     }
+    // endregion
 
-    // Core stuff
+    // region Core stuff
     private lateinit var canvas: PGraphics
     private lateinit var knight1: KnightRiderGenerator
     private lateinit var knight2: KnightRiderGenerator
     private lateinit var strobe1: StrobeGenerator
     private lateinit var laser1: LaserGenerator
+    // endregion
+
+    private fun createObjects(w: Int, h: Int) {
+        canvas = createGraphics(w, h, PConstants.P2D)
+        if (::knight1.isInitialized) knight1.unpatch()
+        knight1 = KnightRiderGenerator(this, w, h, sink)
+        if (::knight2.isInitialized) knight2.unpatch()
+        knight2 = KnightRiderGenerator(this, w, h, sink)
+        if (::strobe1.isInitialized) strobe1.unpatch()
+        strobe1 = StrobeGenerator(this, w, h, sink)
+        if (::laser1.isInitialized) laser1.unpatch()
+        laser1 = LaserGenerator(this, w, h, sink)
+    }
 
     override fun settings() = size(1280, 720, PConstants.P3D)
 
@@ -83,18 +99,6 @@ class MainSketch : PApplet() {
         colorModeHSB()
         createObjects(canvasWidth, canvasHeight)
         println(artnetPatch.toString())
-    }
-
-    private fun createObjects(w: Int, h: Int) {
-        canvas = createGraphics(w, h, PConstants.P2D)
-        if (::knight1.isInitialized) knight1.destroy()
-        knight1 = KnightRiderGenerator(this, w, h, sink)
-        if (::knight2.isInitialized) knight2.destroy()
-        knight2 = KnightRiderGenerator(this, w, h, sink)
-        if (::strobe1.isInitialized) strobe1.destroy()
-        strobe1 = StrobeGenerator(this, w, h, sink)
-        if (::laser1.isInitialized) laser1.destroy()
-        laser1 = LaserGenerator(this, w, h, sink)
     }
 
     override fun draw() {

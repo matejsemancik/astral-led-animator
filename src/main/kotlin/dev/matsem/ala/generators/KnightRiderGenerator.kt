@@ -24,7 +24,7 @@ class KnightRiderGenerator(private val sketch: PApplet, w: Int, h: Int, private 
     private val canvas = sketch.createGraphics(w, h, PConstants.P2D)
     private val oscil = Oscil(fHzInternal, 1f, Waves.TRIANGLE).apply { patch(sink) }
 
-    override fun destroy() = oscil.unpatch(sink)
+    override fun unpatch() = oscil.unpatch(sink)
 
     fun generate(fHz: Float, amplitude: Float, beamWidth: Int, color: Int, fading: Float): PGraphics {
         fHzInternal = fHz
