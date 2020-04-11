@@ -32,7 +32,7 @@ class BeatDetectGenerator(private val sketch: PApplet, w: Int, h: Int, private v
             fadeToBlackBy(fading.value)
             rectMode(PConstants.CORNER)
             noStroke()
-            fill(color(hue.value.mapp(0f, 360f), 100f, 100f))
+            fill(color(hue.value, 100f, 100f))
             val rectW = width / beatDetect.detectSize()
             for (i in 0 until beatDetect.detectSize()) {
                 if (beatDetect.isOnset(i)) {

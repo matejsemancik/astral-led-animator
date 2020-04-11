@@ -51,7 +51,7 @@ class FFTGenerator(
             fadeToBlackBy(fading.value)
             noFill()
             strokeWeight(1f)
-            stroke(color(hue.value.mapp(0f, 360f), 100f, 100f))
+            stroke(color(hue.value, 100f, 100f))
 
             for (y in 0 until widths.count()) {
                 line(0f, y.toFloat(), widths[y], y.toFloat())

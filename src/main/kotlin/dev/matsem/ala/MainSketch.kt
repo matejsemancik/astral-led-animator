@@ -3,6 +3,7 @@ package dev.matsem.ala
 import ch.bildspur.artnet.ArtNetClient
 import ddf.minim.Minim
 import ddf.minim.ugens.Constant
+import ddf.minim.ugens.Multiplier
 import ddf.minim.ugens.Sink
 import dev.matsem.ala.generators.*
 import dev.matsem.ala.tools.dmx.ArtnetPatch
@@ -93,7 +94,7 @@ class MainSketch : PApplet() {
 
         slider1.patch(beatDetect1.dampening)
         slider2.patch(beatDetect1.fading)
-        slider3.patch(beatDetect1.hue)
+        slider3.patch(Multiplier(360f)).patch(beatDetect1.hue)
     }
 
     private fun kontrolToUgens() {
