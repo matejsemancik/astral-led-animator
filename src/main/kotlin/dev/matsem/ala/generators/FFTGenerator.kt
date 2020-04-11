@@ -4,10 +4,11 @@ import ddf.minim.AudioInput
 import ddf.minim.analysis.FFT
 import ddf.minim.ugens.Sink
 import ddf.minim.ugens.Summer
+import dev.matsem.ala.model.BlendMode
+import dev.matsem.ala.model.GeneratorResult
 import dev.matsem.ala.tools.audio.FFTListener
 import dev.matsem.ala.tools.extensions.*
 import processing.core.PApplet
-import processing.core.PGraphics
 import kotlin.math.max
 
 class FFTGenerator(
@@ -30,7 +31,7 @@ class FFTGenerator(
     private val maximums = Array(h) { 0f }
     private val smoothed = Array(h) { 0f }
 
-    override fun generate(): PGraphics {
+    override fun generate(): GeneratorResult {
         val freqRange = 20f..1000f
         val ranges = freqRange.split(canvas.height)
         val averages = ranges.map { range -> fft.calcAvg(range) }
@@ -63,6 +64,6 @@ class FFTGenerator(
                 updatePixels()
             }
         }
-        return canvas
+        return GeneratorResult(canvas, BlendMode.ADD)
     }
 }

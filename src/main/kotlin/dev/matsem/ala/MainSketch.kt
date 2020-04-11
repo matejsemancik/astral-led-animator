@@ -82,10 +82,10 @@ class MainSketch : PApplet() {
         generators.clear()
         canvas = createGraphics(w, h, PConstants.P2D)
         knight1 = KnightRiderGenerator(this, sink, w, h).also { generators += it }
-        strobe1 = StrobeGenerator(this, sink, w, h).also { generators += it }
         laser1 = LaserGenerator(this, sink, w, h).also { generators += it }
         beatDetect1 = BeatDetectGenerator(this, sink, w, h, lineIn).also { generators += it }
         fft1 = FFTGenerator(this, sink, w, h, lineIn).also { generators += it }
+        strobe1 = StrobeGenerator(this, sink, w, h).also { generators += it }
 
         patchControls()
     }
@@ -144,10 +144,10 @@ class MainSketch : PApplet() {
         colorMode(PConstants.HSB, 360f, 100f, 100f, 100f)
         draw {
             clear()
-            val f = laser1.generate()
-            val s = strobe1.generate()
-            blend(f, 0, 0, f.width, f.height, 0, 0, width, height, PConstants.ADD)
-            blend(s, 0, 0, s.width, s.height, 0, 0, width, height, PConstants.MULTIPLY)
+            generators.forEach {
+                val (graphics, blendMode) = it.generate()
+                blend(graphics, 0, 0, graphics.width, graphics.height, 0, 0, width, height, blendMode.id)
+            }
         }
     }
 

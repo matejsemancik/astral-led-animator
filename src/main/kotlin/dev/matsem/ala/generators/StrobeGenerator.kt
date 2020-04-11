@@ -4,19 +4,20 @@ import ddf.minim.ugens.Oscil
 import ddf.minim.ugens.Sink
 import ddf.minim.ugens.Summer
 import ddf.minim.ugens.Waves
+import dev.matsem.ala.model.BlendMode
+import dev.matsem.ala.model.GeneratorResult
 import dev.matsem.ala.tools.extensions.draw
 import dev.matsem.ala.tools.extensions.pushPop
 import dev.matsem.ala.tools.extensions.value
 import processing.core.PApplet
 import processing.core.PConstants
-import processing.core.PGraphics
 
 class StrobeGenerator(sketch: PApplet, sink: Sink, w: Int, h: Int) : BaseGenerator(sketch, sink, w, h) {
 
     private val oscil = Oscil(0f, 1f, Waves.SINE).sinked()
     val frequency = Summer().patchedTo(oscil.frequency)
 
-    override fun generate(): PGraphics {
+    override fun generate(): GeneratorResult {
         val strobe = oscil.value > 0 && frequency.value > 0f
         canvas.draw {
             if (strobe) {
@@ -32,6 +33,6 @@ class StrobeGenerator(sketch: PApplet, sink: Sink, w: Int, h: Int) : BaseGenerat
             }
         }
 
-        return canvas
+        return GeneratorResult(canvas, BlendMode.MULTIPLY)
     }
 }

@@ -2,9 +2,9 @@ package dev.matsem.ala.generators
 
 import ddf.minim.UGen
 import ddf.minim.ugens.Sink
+import dev.matsem.ala.model.GeneratorResult
 import processing.core.PApplet
 import processing.core.PConstants
-import processing.core.PGraphics
 
 abstract class BaseGenerator(sketch: PApplet, private val sink: Sink, w: Int, h: Int) {
 
@@ -12,7 +12,7 @@ abstract class BaseGenerator(sketch: PApplet, private val sink: Sink, w: Int, h:
     internal val canvas = sketch.createGraphics(w, h, renderer)
     private val sinkedUGens = mutableListOf<UGen>()
 
-    abstract fun generate(): PGraphics
+    abstract fun generate(): GeneratorResult
 
     fun unpatch() {
         sinkedUGens.forEach {

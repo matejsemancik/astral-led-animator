@@ -4,11 +4,12 @@ import ddf.minim.AudioInput
 import ddf.minim.analysis.BeatDetect
 import ddf.minim.ugens.Sink
 import ddf.minim.ugens.Summer
+import dev.matsem.ala.model.BlendMode
+import dev.matsem.ala.model.GeneratorResult
 import dev.matsem.ala.tools.audio.BeatListener
 import dev.matsem.ala.tools.extensions.*
 import processing.core.PApplet
 import processing.core.PConstants
-import processing.core.PGraphics
 
 class BeatDetectGenerator(
     sketch: PApplet,
@@ -25,7 +26,7 @@ class BeatDetectGenerator(
     private val beatDetect = BeatDetect(lineIn.bufferSize(), lineIn.sampleRate()).apply { setSensitivity(10) }
     private val beatListener = BeatListener(lineIn, beatDetect)
 
-    override fun generate(): PGraphics {
+    override fun generate(): GeneratorResult {
         beatDetect.setSensitivity(dampening.value.mapp(10f, 300f).toInt())
         canvas.noSmooth()
         canvas.draw {
@@ -41,6 +42,7 @@ class BeatDetectGenerator(
                 }
             }
         }
-        return canvas
+
+        return GeneratorResult(canvas, BlendMode.ADD)
     }
 }

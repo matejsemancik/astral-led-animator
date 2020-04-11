@@ -4,9 +4,10 @@ import ddf.minim.ugens.Oscil
 import ddf.minim.ugens.Sink
 import ddf.minim.ugens.Summer
 import ddf.minim.ugens.Waves
+import dev.matsem.ala.model.BlendMode
+import dev.matsem.ala.model.GeneratorResult
 import dev.matsem.ala.tools.extensions.*
 import processing.core.PApplet
-import processing.core.PGraphics
 
 class LaserGenerator(sketch: PApplet, sink: Sink, w: Int, h: Int) : BaseGenerator(sketch, sink, w, h) {
 
@@ -18,7 +19,7 @@ class LaserGenerator(sketch: PApplet, sink: Sink, w: Int, h: Int) : BaseGenerato
     val fading = Summer().sinked()
     val mod = Summer().sinked()
 
-    override fun generate(): PGraphics {
+    override fun generate(): GeneratorResult {
         val beamWidth = beamWidth.value.toInt().constrain(low = 1)
         val mod = mod.value.toInt().constrain(low = 1)
 
@@ -42,6 +43,6 @@ class LaserGenerator(sketch: PApplet, sink: Sink, w: Int, h: Int) : BaseGenerato
             }
         }
 
-        return canvas
+        return GeneratorResult(canvas, BlendMode.ADD)
     }
 }
