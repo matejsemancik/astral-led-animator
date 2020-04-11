@@ -95,6 +95,7 @@ class MainSketch : PApplet() {
         slider4.patch(Multiplier(w.toFloat())).patch(laser1.beamWidth)
         knob1.patch(laser1.fading)
         knob2.patch(Multiplier(10f)).patch(laser1.mod)
+        knob4.patch(Multiplier(10f)).patch(strobe1.frequency)
     }
 
     private fun kontrolToUgens() {
@@ -142,7 +143,9 @@ class MainSketch : PApplet() {
         draw {
             clear()
             val f = laser1.generate()
+            val s = strobe1.generate()
             blend(f, 0, 0, f.width, f.height, 0, 0, width, height, PConstants.ADD)
+            blend(s, 0, 0, s.width, s.height, 0, 0, width, height, PConstants.MULTIPLY)
         }
     }
 
