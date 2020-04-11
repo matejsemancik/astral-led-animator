@@ -12,30 +12,20 @@ import processing.core.PGraphics
 
 class BeatDetectGenerator(
     sketch: PApplet,
+    sink: Sink,
     w: Int,
     h: Int,
-    lineIn: AudioInput,
-    private val sink: Sink
-) :
-    Generator {
+    lineIn: AudioInput
+) : BaseGenerator(sketch, sink, w, h) {
 
-    private val canvas = sketch.createGraphics(w, h, PConstants.P2D)
-
-    val dampening = Summer().apply { patch(sink) }
-    val fading = Summer().apply { patch(sink) }
-    val hue = Summer().apply { patch(sink) }
+    val dampening = Summer().sinked()
+    val fading = Summer().sinked()
+    val hue = Summer().sinked()
 
     private val beatDetect = BeatDetect(lineIn.bufferSize(), lineIn.sampleRate()).apply { setSensitivity(10) }
     private val beatListener = BeatListener(lineIn, beatDetect)
 
-    override fun unpatch() {
-        beatListener.unpatch()
-        dampening.unpatch(sink)
-        fading.unpatch(sink)
-        hue.unpatch(sink)
-    }
-
-    fun generate(): PGraphics {
+    override fun generate(): PGraphics {
         beatDetect.setSensitivity(dampening.value.mapp(10f, 300f).toInt())
         canvas.noSmooth()
         canvas.draw {

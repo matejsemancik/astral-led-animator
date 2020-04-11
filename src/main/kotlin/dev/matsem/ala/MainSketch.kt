@@ -74,28 +74,20 @@ class MainSketch : PApplet() {
     private lateinit var laser1: LaserGenerator
     private lateinit var beatDetect1: BeatDetectGenerator
     private lateinit var fft1: FFTGenerator
+    private val generators = mutableListOf<BaseGenerator>()
     // endregion
 
     private fun createObjects(w: Int, h: Int) {
+        generators.forEach { it.unpatch() }
+        generators.clear()
         canvas = createGraphics(w, h, PConstants.P2D)
-        if (::knight1.isInitialized) knight1.unpatch()
-        knight1 = KnightRiderGenerator(this, w, h, sink)
-        if (::strobe1.isInitialized) strobe1.unpatch()
-        strobe1 = StrobeGenerator(this, w, h, sink)
-        if (::laser1.isInitialized) laser1.unpatch()
-        laser1 = LaserGenerator(this, w, h, sink)
-        if (::beatDetect1.isInitialized) beatDetect1.unpatch()
-        beatDetect1 = BeatDetectGenerator(this, w, h, lineIn, sink)
-        if (::fft1.isInitialized) fft1.unpatch()
-        fft1 = FFTGenerator(this, w, h, lineIn, sink)
+        knight1 = KnightRiderGenerator(this, sink, w, h).also { generators += it }
+        strobe1 = StrobeGenerator(this, sink, w, h).also { generators += it }
+        laser1 = LaserGenerator(this, sink, w, h).also { generators += it }
+        beatDetect1 = BeatDetectGenerator(this, sink, w, h, lineIn).also { generators += it }
+        fft1 = FFTGenerator(this, sink, w, h, lineIn).also { generators += it }
 
-        slider1.patch(Multiplier(360f)).patch(laser1.hue)
-        slider2.patch(Multiplier(5f)).patch(laser1.frequency)
-        slider3.patch(Multiplier(2f)).patch(laser1.amplitude)
-        slider4.patch(Multiplier(w.toFloat())).patch(laser1.beamWidth)
-        knob1.patch(laser1.fading)
-        knob2.patch(Multiplier(10f)).patch(laser1.mod)
-        knob4.patch(Multiplier(10f)).patch(strobe1.frequency)
+        patchControls()
     }
 
     private fun kontrolToUgens() {
@@ -107,6 +99,16 @@ class MainSketch : PApplet() {
         slider2.setConstant(kontrol.slider2.midiRange(1f))
         slider3.setConstant(kontrol.slider3.midiRange(1f))
         slider4.setConstant(kontrol.slider4.midiRange(1f))
+    }
+
+    private fun patchControls() {
+        slider1.patch(Multiplier(360f)).patch(laser1.hue)
+        slider2.patch(Multiplier(5f)).patch(laser1.frequency)
+        slider3.patch(Multiplier(2f)).patch(laser1.amplitude)
+        slider4.patch(Multiplier(canvas.width.toFloat())).patch(laser1.beamWidth)
+        knob1.patch(laser1.fading)
+        knob2.patch(Multiplier(10f)).patch(laser1.mod)
+        knob4.patch(Multiplier(10f)).patch(strobe1.frequency)
     }
 
     override fun settings() = size(1280, 720, PConstants.P3D)

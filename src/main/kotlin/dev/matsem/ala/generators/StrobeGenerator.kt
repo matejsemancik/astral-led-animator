@@ -11,17 +11,12 @@ import processing.core.PApplet
 import processing.core.PConstants
 import processing.core.PGraphics
 
-class StrobeGenerator(sketch: PApplet, w: Int, h: Int, private val sink: Sink) : Generator {
+class StrobeGenerator(sketch: PApplet, sink: Sink, w: Int, h: Int) : BaseGenerator(sketch, sink, w, h) {
 
-    private val canvas = sketch.createGraphics(w, h, PConstants.P2D)
-    private val oscil = Oscil(0f, 1f, Waves.SINE).apply { patch(sink) }
-    val frequency = Summer().apply { patch(oscil.frequency) }
+    private val oscil = Oscil(0f, 1f, Waves.SINE).sinked()
+    val frequency = Summer().patchedTo(oscil.frequency)
 
-    override fun unpatch() {
-        oscil.unpatch(sink)
-    }
-
-    fun generate(): PGraphics {
+    override fun generate(): PGraphics {
         val strobe = oscil.value > 0 && frequency.value > 0f
         canvas.draw {
             if (strobe) {

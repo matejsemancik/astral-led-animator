@@ -6,27 +6,19 @@ import ddf.minim.ugens.Summer
 import ddf.minim.ugens.Waves
 import dev.matsem.ala.tools.extensions.*
 import processing.core.PApplet
-import processing.core.PConstants
 import processing.core.PGraphics
 
-class KnightRiderGenerator(sketch: PApplet, w: Int, h: Int, private val sink: Sink) : Generator {
+class KnightRiderGenerator(sketch: PApplet, sink: Sink, w: Int, h: Int) :
+    BaseGenerator(sketch, sink, w, h) {
 
-    private val canvas = sketch.createGraphics(w, h, PConstants.P2D)
-    private val oscil = Oscil(1f, 1f, Waves.TRIANGLE).apply { patch(sink) }
-    val frequency = Summer().apply { patch(oscil.frequency) }
-    val amplitude = Summer().apply { patch(oscil.amplitude) }
-    val beamWidth = Summer().apply { patch(sink) }
-    val hue = Summer().apply { patch(sink) }
-    val fading = Summer().apply { patch(sink) }
+    private val oscil = Oscil(1f, 1f, Waves.TRIANGLE).sinked()
+    val frequency = Summer().patchedTo(oscil.frequency)
+    val amplitude = Summer().patchedTo(oscil.amplitude)
+    val beamWidth = Summer().sinked()
+    val hue = Summer().sinked()
+    val fading = Summer().sinked()
 
-    override fun unpatch() {
-        oscil.unpatch(sink)
-        beamWidth.unpatch(sink)
-        hue.unpatch(sink)
-        fading.unpatch(sink)
-    }
-
-    fun generate(): PGraphics {
+    override fun generate(): PGraphics {
         val beamWidth = beamWidth.value.toInt().constrain(low = 1)
         canvas.noSmooth()
         canvas.draw {
