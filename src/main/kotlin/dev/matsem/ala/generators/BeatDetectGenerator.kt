@@ -2,39 +2,37 @@ package dev.matsem.ala.generators
 
 import ddf.minim.AudioInput
 import ddf.minim.analysis.BeatDetect
+import ddf.minim.ugens.Sink
+import ddf.minim.ugens.Summer
 import dev.matsem.ala.tools.audio.BeatListener
-import dev.matsem.ala.tools.extensions.colorModeHSB
-import dev.matsem.ala.tools.extensions.draw
-import dev.matsem.ala.tools.extensions.fadeToBlackBy
+import dev.matsem.ala.tools.extensions.*
 import processing.core.PApplet
 import processing.core.PConstants
 import processing.core.PGraphics
-import kotlin.properties.Delegates
 
-class BeatDetectGenerator(private val sketch: PApplet, w: Int, h: Int, private val lineIn: AudioInput) : Generator {
+class BeatDetectGenerator(private val sketch: PApplet, w: Int, h: Int, private val lineIn: AudioInput, sink: Sink) :
+    Generator {
 
     private val canvas = sketch.createGraphics(w, h, PConstants.P2D)
 
-    var dampening: Int by Delegates.observable(300) { _, old, new ->
-        if (new != old) {
-            beatDetect.setSensitivity(new)
-        }
-    }
-    var fading = 1f
-    var color: Int = sketch.color(120f, 100f, 100f)
-    private val beatDetect = BeatDetect(lineIn.bufferSize(), lineIn.sampleRate()).apply { setSensitivity(dampening) }
+    val dampening = Summer().apply { patch(sink) }
+    val fading = Summer().apply { patch(sink) }
+    val hue = Summer().apply { patch(sink) }
+
+    private val beatDetect = BeatDetect(lineIn.bufferSize(), lineIn.sampleRate()).apply { setSensitivity(10) }
     private val beatListener = BeatListener(lineIn, beatDetect)
 
     override fun unpatch() = beatListener.unpatch()
 
     fun generate(): PGraphics {
+        beatDetect.setSensitivity(dampening.value.mapp(10f, 300f).toInt())
         canvas.noSmooth()
         canvas.draw {
             colorModeHSB()
-            fadeToBlackBy(fading)
+            fadeToBlackBy(fading.value)
             rectMode(PConstants.CORNER)
             noStroke()
-            fill(color)
+            fill(color(hue.value.mapp(0f, 360f), 100f, 100f))
             val rectW = width / beatDetect.detectSize()
             for (i in 0 until beatDetect.detectSize()) {
                 if (beatDetect.isOnset(i)) {

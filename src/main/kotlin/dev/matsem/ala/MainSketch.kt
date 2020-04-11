@@ -17,12 +17,12 @@ import kotlin.properties.Delegates
 class MainSketch : PApplet() {
 
     object Config {
-        const val LED_WIDTH = 150
-        const val LED_HEIGHT = 6
+        const val LED_WIDTH = 30
+        const val LED_HEIGHT = 5
         const val SPACE = 2
         const val SIZE = 10f
         const val NODE_IP = "192.168.1.18"
-        const val OUTPUT_ENABLED = false
+        const val OUTPUT_ENABLED = true
     }
 
     private var canvasWidth: Int by Delegates.vetoable(initialValue = Config.LED_WIDTH) { _, oldVal, newVal ->
@@ -87,14 +87,13 @@ class MainSketch : PApplet() {
         if (::laser1.isInitialized) laser1.unpatch()
         laser1 = LaserGenerator(this, w, h, sink)
         if (::beatDetect1.isInitialized) beatDetect1.unpatch()
-        beatDetect1 = BeatDetectGenerator(this, w, h, lineIn)
+        beatDetect1 = BeatDetectGenerator(this, w, h, lineIn, sink)
         if (::fft1.isInitialized) fft1.unpatch()
         fft1 = FFTGenerator(this, w, h, lineIn, sink)
 
-        slider1.patch(fft1.hue)
-        slider2.patch(fft1.fading)
-        slider3.patch(fft1.widthSpan)
-        knob1.patch(fft1.mirroring)
+        slider1.patch(beatDetect1.dampening)
+        slider2.patch(beatDetect1.fading)
+        slider3.patch(beatDetect1.hue)
     }
 
     private fun kontrolToUgens() {
@@ -141,7 +140,7 @@ class MainSketch : PApplet() {
         colorMode(PConstants.HSB, 360f, 100f, 100f, 100f)
         draw {
             clear()
-            val f = fft1.generate()
+            val f = beatDetect1.generate()
             blend(f, 0, 0, f.width, f.height, 0, 0, width, height, PConstants.ADD)
         }
     }

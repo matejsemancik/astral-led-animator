@@ -14,7 +14,8 @@ val processingLibsDir = props["processingLibsDir"]
 val processingLibs = listOf(
     "minim",
     "themidibus",
-    "artnet4j"
+    "artnet4j",
+    "ControlP5"
 )
 
 application {
