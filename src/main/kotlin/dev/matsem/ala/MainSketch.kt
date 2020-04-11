@@ -89,11 +89,12 @@ class MainSketch : PApplet() {
         if (::fft1.isInitialized) fft1.unpatch()
         fft1 = FFTGenerator(this, w, h, lineIn, sink)
 
-        slider1.patch(Multiplier(360f)).patch(knight1.hue)
-        slider2.patch(Multiplier(5f)).patch(knight1.frequency)
-        slider3.patch(Multiplier(2f)).patch(knight1.amplitude)
-        slider4.patch(Multiplier(w.toFloat())).patch(knight1.beamWidth)
-        knob1.patch(knight1.fading)
+        slider1.patch(Multiplier(360f)).patch(laser1.hue)
+        slider2.patch(Multiplier(5f)).patch(laser1.frequency)
+        slider3.patch(Multiplier(2f)).patch(laser1.amplitude)
+        slider4.patch(Multiplier(w.toFloat())).patch(laser1.beamWidth)
+        knob1.patch(laser1.fading)
+        knob2.patch(Multiplier(10f)).patch(laser1.mod)
     }
 
     private fun kontrolToUgens() {
@@ -140,7 +141,7 @@ class MainSketch : PApplet() {
         colorMode(PConstants.HSB, 360f, 100f, 100f, 100f)
         draw {
             clear()
-            val f = knight1.generate()
+            val f = laser1.generate()
             blend(f, 0, 0, f.width, f.height, 0, 0, width, height, PConstants.ADD)
         }
     }
