@@ -38,7 +38,7 @@ class KnightRiderGenerator(private val sketch: PApplet, w: Int, h: Int, private 
                 fill(color)
 
                 fadeToBlackBy(fading)
-                val x = oscil.lastValue.mapSin(0f, (width - (beamWidth - 1).toFloat())).toInt()
+                val x = oscil.value.mapSin(0f, (width - (beamWidth - 1).toFloat())).toInt()
                 rect(x.toFloat(), 0f, beamWidth.toFloat(), height.toFloat())
             }
         }

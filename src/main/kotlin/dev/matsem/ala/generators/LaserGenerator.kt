@@ -39,7 +39,7 @@ class LaserGenerator(private val sketch: PApplet, w: Int, h: Int, private val si
                 strokeWeight(1f)
 
                 fadeToBlackBy(fading)
-                val x = oscil.lastValue.mapSin(0f, width.toFloat()).toInt()
+                val x = oscil.value.mapSin(0f, width.toFloat()).toInt()
                 for (y in 0 until height) {
                     if (y % mod == 0) {
                         line(x.toFloat(), y.toFloat(), x + beamWidth.toFloat(), y + 1f)

@@ -4,7 +4,7 @@ import ddf.minim.ugens.Oscil
 import ddf.minim.ugens.Sink
 import ddf.minim.ugens.Waves
 import dev.matsem.ala.tools.extensions.draw
-import dev.matsem.ala.tools.extensions.lastValue
+import dev.matsem.ala.tools.extensions.value
 import dev.matsem.ala.tools.extensions.pushPop
 import processing.core.PApplet
 import processing.core.PConstants
@@ -25,7 +25,7 @@ class StrobeGenerator(private val sketch: PApplet, w: Int, h: Int, private val s
 
     fun generate(fHz: Float, color: Int): PGraphics {
         fHzInternal = fHz
-        val strobe = oscil.lastValue > 0 && fHz > 0f
+        val strobe = oscil.value > 0 && fHz > 0f
         canvas.draw {
             if (strobe) {
                 colorMode(PConstants.HSB, 360f, 100f, 100f, 100f)

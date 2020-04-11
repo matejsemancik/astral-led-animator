@@ -2,6 +2,7 @@ package dev.matsem.ala
 
 import ch.bildspur.artnet.ArtNetClient
 import ddf.minim.Minim
+import ddf.minim.ugens.Constant
 import ddf.minim.ugens.Sink
 import dev.matsem.ala.generators.*
 import dev.matsem.ala.tools.dmx.ArtnetPatch
@@ -16,8 +17,8 @@ import kotlin.properties.Delegates
 class MainSketch : PApplet() {
 
     object Config {
-        const val LED_WIDTH = 100
-        const val LED_HEIGHT = 10
+        const val LED_WIDTH = 150
+        const val LED_HEIGHT = 6
         const val SPACE = 2
         const val SIZE = 10f
         const val NODE_IP = "192.168.1.18"
@@ -41,14 +42,14 @@ class MainSketch : PApplet() {
 
     // region Kontrol F1 MIDI controller stuff
     private val kontrol = KontrolF1().apply { connect() }
-    private var knob1 = 0f
-    private var knob2 = 0f
-    private var knob3 = 0f
-    private var knob4 = 0f
-    private var slider1 = 0f
-    private var slider2 = 0f
-    private var slider3 = 0f
-    private var slider4 = 0f
+    private var knob1 = Constant(0f)
+    private var knob2 = Constant(0f)
+    private var knob3 = Constant(0f)
+    private var knob4 = Constant(0f)
+    private var slider1 = Constant(0f)
+    private var slider2 = Constant(0f)
+    private var slider3 = Constant(0f)
+    private var slider4 = Constant(0f)
     // endregion
 
     // region Minim, oscillators, audio stuff
@@ -88,7 +89,22 @@ class MainSketch : PApplet() {
         if (::beatDetect1.isInitialized) beatDetect1.unpatch()
         beatDetect1 = BeatDetectGenerator(this, w, h, lineIn)
         if (::fft1.isInitialized) fft1.unpatch()
-        fft1 = FFTGenerator(this, w, h, lineIn)
+        fft1 = FFTGenerator(this, w, h, lineIn, sink)
+
+        slider1.patch(fft1.hue)
+        slider2.patch(fft1.fading)
+        slider3.patch(fft1.widthSpan)
+    }
+
+    private fun kontrolToUgens() {
+        knob1.setConstant(kontrol.knob1.midiRange(1f))
+        knob2.setConstant(kontrol.knob2.midiRange(1f))
+        knob3.setConstant(kontrol.knob3.midiRange(1f))
+        knob4.setConstant(kontrol.knob4.midiRange(1f))
+        slider1.setConstant(kontrol.slider1.midiRange(1f))
+        slider2.setConstant(kontrol.slider2.midiRange(1f))
+        slider3.setConstant(kontrol.slider3.midiRange(1f))
+        slider4.setConstant(kontrol.slider4.midiRange(1f))
     }
 
     override fun settings() = size(1280, 720, PConstants.P3D)
@@ -107,15 +123,7 @@ class MainSketch : PApplet() {
     }
 
     override fun draw() {
-        knob1 = kontrol.knob1.midiRange(1f)
-        knob2 = kontrol.knob2.midiRange(1f)
-        knob3 = kontrol.knob3.midiRange(1f)
-        knob4 = kontrol.knob4.midiRange(1f)
-        slider1 = kontrol.slider1.midiRange(1f)
-        slider2 = kontrol.slider2.midiRange(1f)
-        slider3 = kontrol.slider3.midiRange(1f)
-        slider4 = kontrol.slider4.midiRange(1f)
-
+        kontrolToUgens()
         background(0f, 0f, 10f)
         renderCanvas()
         drawOutput()
@@ -132,10 +140,6 @@ class MainSketch : PApplet() {
         colorMode(PConstants.HSB, 360f, 100f, 100f, 100f)
         draw {
             clear()
-            fft1.fading = slider1
-            fft1.color = color(slider2.mapp(0f, 360f), 100f, 100f)
-            fft1.widthSpan = slider3
-            fft1.smoothing = slider4
             val f = fft1.generate()
             blend(f, 0, 0, f.width, f.height, 0, 0, width, height, PConstants.ADD)
         }
