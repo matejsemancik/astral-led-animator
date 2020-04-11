@@ -3,6 +3,7 @@ package dev.matsem.ala
 import ch.bildspur.artnet.ArtNetClient
 import ddf.minim.Minim
 import ddf.minim.ugens.Sink
+import dev.matsem.ala.generators.BeatDetectGenerator
 import dev.matsem.ala.generators.KnightRiderGenerator
 import dev.matsem.ala.generators.LaserGenerator
 import dev.matsem.ala.generators.StrobeGenerator
@@ -18,8 +19,8 @@ import kotlin.properties.Delegates
 class MainSketch : PApplet() {
 
     object Config {
-        const val LED_WIDTH = 150
-        const val LED_HEIGHT = 6
+        const val LED_WIDTH = 30
+        const val LED_HEIGHT = 5
         const val SPACE = 2
         const val SIZE = 10f
         const val NODE_IP = "192.168.1.18"
@@ -43,18 +44,19 @@ class MainSketch : PApplet() {
 
     // region Kontrol F1 MIDI controller stuff
     private val kontrol = KontrolF1().apply { connect() }
-    private var a1 = 0f
-    private var b1 = 0f
-    private var c1 = 0f
-    private var d1 = 0f
-    private var a2 = 0f
-    private var b2 = 0f
-    private var c2 = 0f
-    private var d2 = 0f
+    private var knob1 = 0f
+    private var knob2 = 0f
+    private var knob3 = 0f
+    private var knob4 = 0f
+    private var slider1 = 0f
+    private var slider2 = 0f
+    private var slider3 = 0f
+    private var slider4 = 0f
     // endregion
 
     // region Minim, oscillators, audio stuff
     private val minim = Minim(this)
+    private val lineIn = minim.lineIn
     private val lineOut = minim.lineOut
     private val sink = Sink().apply { patch(lineOut) }
     // endregion
@@ -72,6 +74,7 @@ class MainSketch : PApplet() {
     private lateinit var knight2: KnightRiderGenerator
     private lateinit var strobe1: StrobeGenerator
     private lateinit var laser1: LaserGenerator
+    private lateinit var beatDetect1: BeatDetectGenerator
     // endregion
 
     private fun createObjects(w: Int, h: Int) {
@@ -84,6 +87,8 @@ class MainSketch : PApplet() {
         strobe1 = StrobeGenerator(this, w, h, sink)
         if (::laser1.isInitialized) laser1.unpatch()
         laser1 = LaserGenerator(this, w, h, sink)
+        if (::beatDetect1.isInitialized) beatDetect1.unpatch()
+        beatDetect1 = BeatDetectGenerator(this, w, h, lineIn)
     }
 
     override fun settings() = size(1280, 720, PConstants.P3D)
@@ -102,14 +107,14 @@ class MainSketch : PApplet() {
     }
 
     override fun draw() {
-        a1 = kontrol.knob1.midiRange(1f)
-        b1 = kontrol.knob2.midiRange(1f)
-        c1 = kontrol.knob3.midiRange(1f)
-        d1 = kontrol.knob4.midiRange(1f)
-        a2 = kontrol.slider1.midiRange(1f)
-        b2 = kontrol.slider2.midiRange(1f)
-        c2 = kontrol.slider3.midiRange(1f)
-        d2 = kontrol.slider4.midiRange(1f)
+        knob1 = kontrol.knob1.midiRange(1f)
+        knob2 = kontrol.knob2.midiRange(1f)
+        knob3 = kontrol.knob3.midiRange(1f)
+        knob4 = kontrol.knob4.midiRange(1f)
+        slider1 = kontrol.slider1.midiRange(1f)
+        slider2 = kontrol.slider2.midiRange(1f)
+        slider3 = kontrol.slider3.midiRange(1f)
+        slider4 = kontrol.slider4.midiRange(1f)
 
         background(0f, 0f, 10f)
         renderCanvas()
@@ -127,14 +132,11 @@ class MainSketch : PApplet() {
         colorMode(PConstants.HSB, 360f, 100f, 100f, 100f)
         draw {
             clear()
-            val g = knight1.generate(
-                fHz = a1 * 20f,
-                amplitude = b1 * 2f,
-                beamWidth = c1.mapp(1f, width.toFloat()).toInt().constrain(low = 1),
-                color = color(0f, 0f, 100f),
-                fading = d1
-            )
-            blend(g, 0, 0, g.width, g.height, 0, 0, width, height, PConstants.ADD)
+            beatDetect1.dampening = (slider1 * 1000f).toInt()
+            beatDetect1.fading = slider2.mapp(0.5f, 1f)
+            beatDetect1.color = color(slider3.mapp(0f, 360f), 100f, 100f)
+            val b = beatDetect1.generate()
+            blend(b, 0, 0, b.width, b.height, 0, 0, width, height, PConstants.ADD)
         }
     }
 
