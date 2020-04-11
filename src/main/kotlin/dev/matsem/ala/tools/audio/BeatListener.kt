@@ -12,11 +12,7 @@ class BeatListener(private val lineIn: AudioInput, private val beatDetect: BeatD
 
     fun unpatch() = lineIn.removeListener(this)
 
-    override fun samples(samp: FloatArray?) {
-        beatDetect.detect(lineIn.mix)
-    }
+    override fun samples(samp: FloatArray?) = beatDetect.detect(lineIn.mix)
 
-    override fun samples(sampL: FloatArray?, sampR: FloatArray?) {
-        beatDetect.detect(lineIn.mix)
-    }
+    override fun samples(sampL: FloatArray?, sampR: FloatArray?) = beatDetect.detect(lineIn.mix)
 }

@@ -3,10 +3,7 @@ package dev.matsem.ala
 import ch.bildspur.artnet.ArtNetClient
 import ddf.minim.Minim
 import ddf.minim.ugens.Sink
-import dev.matsem.ala.generators.BeatDetectGenerator
-import dev.matsem.ala.generators.KnightRiderGenerator
-import dev.matsem.ala.generators.LaserGenerator
-import dev.matsem.ala.generators.StrobeGenerator
+import dev.matsem.ala.generators.*
 import dev.matsem.ala.tools.dmx.ArtnetPatch
 import dev.matsem.ala.tools.extensions.*
 import dev.matsem.ala.tools.kontrol.KontrolF1
@@ -19,8 +16,8 @@ import kotlin.properties.Delegates
 class MainSketch : PApplet() {
 
     object Config {
-        const val LED_WIDTH = 30
-        const val LED_HEIGHT = 5
+        const val LED_WIDTH = 100
+        const val LED_HEIGHT = 10
         const val SPACE = 2
         const val SIZE = 10f
         const val NODE_IP = "192.168.1.18"
@@ -75,6 +72,7 @@ class MainSketch : PApplet() {
     private lateinit var strobe1: StrobeGenerator
     private lateinit var laser1: LaserGenerator
     private lateinit var beatDetect1: BeatDetectGenerator
+    private lateinit var fft1: FFTGenerator
     // endregion
 
     private fun createObjects(w: Int, h: Int) {
@@ -89,6 +87,8 @@ class MainSketch : PApplet() {
         laser1 = LaserGenerator(this, w, h, sink)
         if (::beatDetect1.isInitialized) beatDetect1.unpatch()
         beatDetect1 = BeatDetectGenerator(this, w, h, lineIn)
+        if (::fft1.isInitialized) fft1.unpatch()
+        fft1 = FFTGenerator(this, w, h, lineIn)
     }
 
     override fun settings() = size(1280, 720, PConstants.P3D)
@@ -132,11 +132,12 @@ class MainSketch : PApplet() {
         colorMode(PConstants.HSB, 360f, 100f, 100f, 100f)
         draw {
             clear()
-            beatDetect1.dampening = (slider1 * 1000f).toInt()
-            beatDetect1.fading = slider2.mapp(0.5f, 1f)
-            beatDetect1.color = color(slider3.mapp(0f, 360f), 100f, 100f)
-            val b = beatDetect1.generate()
-            blend(b, 0, 0, b.width, b.height, 0, 0, width, height, PConstants.ADD)
+            fft1.fading = slider1
+            fft1.color = color(slider2.mapp(0f, 360f), 100f, 100f)
+            fft1.widthSpan = slider3
+            fft1.smoothing = slider4
+            val f = fft1.generate()
+            blend(f, 0, 0, f.width, f.height, 0, 0, width, height, PConstants.ADD)
         }
     }
 
