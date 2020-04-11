@@ -11,7 +11,7 @@ import processing.core.PApplet
 import processing.core.PConstants
 import processing.core.PGraphics
 
-class StrobeGenerator(private val sketch: PApplet, w: Int, h: Int, private val sink: Sink) : Generator {
+class StrobeGenerator(sketch: PApplet, w: Int, h: Int, private val sink: Sink) : Generator {
 
     private val canvas = sketch.createGraphics(w, h, PConstants.P2D)
     private val oscil = Oscil(0f, 1f, Waves.SINE).apply { patch(sink) }

@@ -9,7 +9,7 @@ import processing.core.PApplet
 import processing.core.PConstants
 import processing.core.PGraphics
 
-class LaserGenerator(private val sketch: PApplet, w: Int, h: Int, private val sink: Sink) : Generator {
+class LaserGenerator(sketch: PApplet, w: Int, h: Int, private val sink: Sink) : Generator {
 
     private val canvas = sketch.createGraphics(w, h, PConstants.P2D)
     private val oscil = Oscil(1f, 1f, Waves.SAW).apply { patch(sink) }
