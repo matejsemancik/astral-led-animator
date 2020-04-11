@@ -21,7 +21,9 @@ abstract class BaseGenerator(sketch: PApplet, private val sink: Sink, w: Int, h:
     }
 
     /**
-     * Patches this UGen to global [Sink] used to tick all running UGens, disposing any audio generated
+     * Patches this UGen to global [Sink] used to tick all running UGens.
+     * This also registers this [UGen] to [sinkedUGens], which will be unpatched from [sink] after generator
+     * is destroyed to avoid possible memory leaks.
      */
     internal fun <T : UGen> T.sinked() = apply {
         patch(sink)
@@ -29,9 +31,9 @@ abstract class BaseGenerator(sketch: PApplet, private val sink: Sink, w: Int, h:
     }
 
     /**
-     * Patches [UGen] to provided [ugen] instance and returns this [UGen].
+     * Patches [UGen] to provided [ugen] instance and returns back this [UGen].
      * This method is different to UGen.patch(...) method, which, on other side returns [UGen]
-     * being patched to for chaining purposes.
+     * being patched (to for chaining purposes).
      */
     internal fun <T : UGen> T.patchedTo(ugen: UGen.UGenInput) = apply {
         patch(ugen)
