@@ -94,6 +94,7 @@ class MainSketch : PApplet() {
         slider1.patch(fft1.hue)
         slider2.patch(fft1.fading)
         slider3.patch(fft1.widthSpan)
+        knob1.patch(fft1.mirroring)
     }
 
     private fun kontrolToUgens() {

@@ -24,6 +24,7 @@ class FFTGenerator(
     val fading = Summer().apply { patch(sink) }
     val hue = Summer().apply { patch(sink) }
     val widthSpan = Summer().apply { patch(sink) }
+    val mirroring = Summer().apply { patch(sink) }
 
     private val fft = FFT(lineIn.bufferSize(), lineIn.sampleRate()).apply {
         logAverages(22, 3)
@@ -54,6 +55,17 @@ class FFTGenerator(
 
             for (y in 0 until widths.count()) {
                 line(0f, y.toFloat(), widths[y], y.toFloat())
+            }
+
+            if (mirroring.value > 0.5f) {
+                loadPixels()
+                val mirrored = pixels.copyOf().reversed().toTypedArray()
+                mirrored.modifyIndexed { index, current ->
+                    current or pixels[index]
+                }
+
+                pixels = mirrored.toIntArray()
+                updatePixels()
             }
         }
         return canvas
