@@ -12,10 +12,10 @@ import processing.core.PGraphics
 import kotlin.math.max
 
 class FFTGenerator(
-    private val sketch: PApplet,
+    sketch: PApplet,
     w: Int,
     h: Int,
-    private val lineIn: AudioInput,
+    lineIn: AudioInput,
     private val sink: Sink
 ) : Generator {
 
@@ -33,7 +33,13 @@ class FFTGenerator(
     private val maximums = Array(h) { 0f }
     private val smoothed = Array(h) { 0f }
 
-    override fun unpatch() = fftListener.unpatch()
+    override fun unpatch() {
+        fftListener.unpatch()
+        fading.unpatch(sink)
+        hue.unpatch(sink)
+        widthSpan.unpatch(sink)
+        mirroring.unpatch(sink)
+    }
 
     fun generate(): PGraphics {
         val freqRange = 20f..1000f

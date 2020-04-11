@@ -70,7 +70,6 @@ class MainSketch : PApplet() {
     // region Core stuff
     private lateinit var canvas: PGraphics
     private lateinit var knight1: KnightRiderGenerator
-    private lateinit var knight2: KnightRiderGenerator
     private lateinit var strobe1: StrobeGenerator
     private lateinit var laser1: LaserGenerator
     private lateinit var beatDetect1: BeatDetectGenerator
@@ -81,8 +80,6 @@ class MainSketch : PApplet() {
         canvas = createGraphics(w, h, PConstants.P2D)
         if (::knight1.isInitialized) knight1.unpatch()
         knight1 = KnightRiderGenerator(this, w, h, sink)
-        if (::knight2.isInitialized) knight2.unpatch()
-        knight2 = KnightRiderGenerator(this, w, h, sink)
         if (::strobe1.isInitialized) strobe1.unpatch()
         strobe1 = StrobeGenerator(this, w, h, sink)
         if (::laser1.isInitialized) laser1.unpatch()
@@ -92,9 +89,11 @@ class MainSketch : PApplet() {
         if (::fft1.isInitialized) fft1.unpatch()
         fft1 = FFTGenerator(this, w, h, lineIn, sink)
 
-        slider1.patch(beatDetect1.dampening)
-        slider2.patch(beatDetect1.fading)
-        slider3.patch(Multiplier(360f)).patch(beatDetect1.hue)
+        slider1.patch(Multiplier(360f)).patch(knight1.hue)
+        slider2.patch(Multiplier(5f)).patch(knight1.frequency)
+        slider3.patch(Multiplier(2f)).patch(knight1.amplitude)
+        slider4.patch(Multiplier(w.toFloat())).patch(knight1.beamWidth)
+        knob1.patch(knight1.fading)
     }
 
     private fun kontrolToUgens() {
@@ -141,7 +140,7 @@ class MainSketch : PApplet() {
         colorMode(PConstants.HSB, 360f, 100f, 100f, 100f)
         draw {
             clear()
-            val f = beatDetect1.generate()
+            val f = knight1.generate()
             blend(f, 0, 0, f.width, f.height, 0, 0, width, height, PConstants.ADD)
         }
     }
