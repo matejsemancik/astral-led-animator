@@ -10,7 +10,7 @@ import processing.core.PGraphics
 import processing.core.PVector
 import java.io.File
 
-class Patchable(private val sketch: PApplet, private var posX: Float = 0f, private var posY: Float = 0f) : PConstants {
+class PatchBox(private val sketch: PApplet, private var posX: Float = 0f, private var posY: Float = 0f) : PConstants {
 
     enum class DragState {
         DRAGGING, IDLE
@@ -102,7 +102,7 @@ class Patchable(private val sketch: PApplet, private var posX: Float = 0f, priva
 
 class ExperimentSketch : PApplet() {
 
-    val patchables = mutableListOf<Patchable>()
+    val patchables = mutableListOf<PatchBox>()
 
     override fun settings() {
         size(1280, 720, PConstants.P3D)
@@ -110,7 +110,7 @@ class ExperimentSketch : PApplet() {
 
     override fun setup() {
         colorModeHSB()
-        patchables += Patchable(this, 10f, 10f)
+        patchables += PatchBox(this, 10f, 10f)
     }
 
     override fun draw() {
