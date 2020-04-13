@@ -42,9 +42,7 @@ class Patcher(private val sketch: PApplet) {
             }
 
             focusedView?.let { focusedView ->
-                println("changing focus order")
                 patchBoxes.sortBy { if (it == focusedView) 1 else 0 }
-                println("new focus order: ${patchBoxes.joinToString { it.text }}")
             }
         }
     }
