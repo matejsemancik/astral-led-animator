@@ -1,25 +1,64 @@
 package dev.matsem.ala
 
 import dev.matsem.ala.tools.extensions.colorModeHSB
+import dev.matsem.ala.tools.extensions.constrain
 import dev.matsem.ala.tools.extensions.draw
 import dev.matsem.ala.tools.extensions.pushPop
 import processing.core.PApplet
 import processing.core.PConstants
 import processing.core.PGraphics
+import processing.core.PVector
 import java.io.File
 
 class Patchable(private val sketch: PApplet, private var posX: Float = 0f, private var posY: Float = 0f) : PConstants {
 
+    enum class DragState {
+        DRAGGING, IDLE
+    }
+
     var width = 100
     var height = 50
-    val strokeWeight = 1f
-    val idleColor = sketch.color(0f, 0f, 70f)
-    val mouseOverColor = sketch.color(0f, 0f, 100f)
+    private val strokeW = 2f
+    private val cornerRadius = 4f
+    private val idleColor = sketch.color(0f, 0f, 80f)
+    private val mouseOverColor = sketch.color(0f, 0f, 100f)
+
+    private var isMouseOver: Boolean = false
+    private var dragState = DragState.IDLE
+    private var dragAnchor = PVector(0f, 0f)
 
     val pg: PGraphics = sketch.createGraphics(width, height, PConstants.P2D)
 
     init {
         sketch.registerMethod("draw", this)
+    }
+
+    private fun updateState() {
+        isMouseOver =
+            sketch.mouseX.toFloat() in (posX..posX + width) && sketch.mouseY.toFloat() in (posY..posY + height)
+
+        when (dragState) {
+            DragState.IDLE -> {
+                if (isMouseOver && sketch.mousePressed) {
+                    dragState = DragState.DRAGGING
+                    dragAnchor = PVector(sketch.mouseX - posX, sketch.mouseY - posY)
+                }
+            }
+            DragState.DRAGGING -> {
+                if (!sketch.mousePressed) {
+                    dragState = DragState.IDLE
+                    constrainPosition()
+                } else {
+                    posX = sketch.mouseX - dragAnchor.x
+                    posY = sketch.mouseY - dragAnchor.y
+                }
+            }
+        }
+    }
+
+    private fun constrainPosition() = with(sketch) {
+        posX = posX.constrain(low = 0f, high = width.toFloat() - 10f)
+        posY = posY.constrain(low = 0f, high = height.toFloat() - 10f)
     }
 
     private fun drawPg() = with(pg) {
@@ -29,14 +68,28 @@ class Patchable(private val sketch: PApplet, private var posX: Float = 0f, priva
             pushPop {
                 rectMode(PConstants.CORNER)
                 noFill()
-                strokeWeight(strokeWeight)
-                stroke(idleColor)
-                rect(0f, 0f, width.toFloat() - strokeWeight, height.toFloat() - strokeWeight)
+                strokeWeight(strokeW)
+                if (isMouseOver || dragState == DragState.DRAGGING) {
+                    stroke(mouseOverColor)
+                } else {
+                    stroke(idleColor)
+                }
+                rect(
+                    0f + strokeW,
+                    0f + strokeW,
+                    width.toFloat() - strokeW * 2,
+                    height.toFloat() - strokeW * 2,
+                    cornerRadius,
+                    cornerRadius,
+                    cornerRadius,
+                    cornerRadius
+                )
             }
         }
     }
 
     fun draw() {
+        updateState()
         drawPg()
         sketch.pushPop {
             hint(PConstants.DISABLE_DEPTH_TEST)
