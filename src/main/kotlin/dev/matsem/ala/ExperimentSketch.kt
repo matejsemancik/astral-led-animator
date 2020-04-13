@@ -46,6 +46,8 @@ class PatchBox(
             posX = sketch.mouseX - dragAnchor.x
             posY = sketch.mouseY - dragAnchor.y
         }
+
+        constrainPosition()
     }
 
     private fun constrainPosition() = with(sketch) {
@@ -109,7 +111,6 @@ class PatchBox(
             }
             event.action == MouseEvent.RELEASE && dragState == DragState.DRAGGING -> {
                 dragState = DragState.IDLE
-                constrainPosition()
             }
         }
     }
@@ -124,6 +125,7 @@ class ExperimentSketch : PApplet() {
     }
 
     override fun setup() {
+        surface.setResizable(true)
         colorModeHSB()
         patchBoxes.apply {
             repeat(5) {
