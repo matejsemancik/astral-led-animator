@@ -51,7 +51,6 @@ class Patcher(private val sketch: PApplet) {
             loop@ for (box in patchBoxes) {
                 if (box.onMouseEvent(event)) {
                     focusedView = box
-                    println("focused view changed to: ${box.text}")
                     break@loop
                 }
             }
