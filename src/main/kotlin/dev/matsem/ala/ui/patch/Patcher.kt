@@ -14,19 +14,25 @@ class Patcher(private val sketch: PApplet) {
     private var isPanning = false
     private var panX = 0f
     private var panY = 0f
+    private val patchStyle: PatchStyle
 
     init {
         sketch.registerMethod("mouseEvent", this)
         sketch.registerMethod("draw", this)
+
+        val font = sketch.createFont("fonts/pixelmix/pixelmix.ttf", 12f, false)
+        patchStyle = PatchStyle(font = font)
     }
 
-    fun createPatchBox(posX: Float, posY: Float): PatchBox {
+    fun createPatchBox(posX: Float, posY: Float, inputs: List<String>, outputs: List<String>): PatchBox {
         return PatchBox(
             sketch,
             cursor,
+            patchStyle,
             posX,
             posY,
-            "${patchBoxes.size}"
+            inputs.map { "- $it" },
+            outputs.map { "$it -" }
         ).also { patchBoxes += it }
     }
 

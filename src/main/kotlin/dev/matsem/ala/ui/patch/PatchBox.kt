@@ -3,81 +3,67 @@ package dev.matsem.ala.ui.patch
 import dev.matsem.ala.tools.extensions.colorModeHSB
 import dev.matsem.ala.tools.extensions.draw
 import dev.matsem.ala.tools.extensions.pushPop
-import dev.matsem.ala.tools.extensions.translateCenter
 import processing.core.PApplet
 import processing.core.PConstants
 import processing.core.PGraphics
 import processing.core.PVector
 import processing.event.MouseEvent
-import kotlin.random.Random
+import kotlin.math.max
 
 class PatchBox(
     private val sketch: PApplet,
     private val cursor: Cursor,
+    private val patchStyle: PatchStyle,
     private var posX: Float = 0f,
     private var posY: Float = 0f,
-    val text: String
+    private val inputs: List<String>,
+    private val outputs: List<String>
 ) : PConstants {
 
     enum class DragState {
         DRAGGING, IDLE
     }
 
-    var width = 100
-    var height = 50
-    private val strokeW = 2f
-    private val cornerRadius = 4f
-    private val idleColor = sketch.color(0f, 0f, 80f)
-    private val mouseOverColor = sketch.color(0f, 0f, 100f)
-    private val bgColor = sketch.color(Random.nextFloat() * 360f, 50f, 50f)
+    // region Drawing
+    private var pg: PGraphics = sketch.createGraphics(calculateWidth(), calculateHeight(), PConstants.P2D)
+    // endregion
 
+    // region State
     private var isMouseOver: Boolean = false
     private var dragState = DragState.IDLE
     private var dragAnchor = PVector(0f, 0f)
-
-    val pg: PGraphics = sketch.createGraphics(width, height, PConstants.P2D)
-
-    private fun mouseInViewBounds() = cursor.x in (posX..posX + width)
-            && cursor.y in (posY..posY + height)
-
-    private fun getColor() = if (isMouseOver || dragState == DragState.DRAGGING) {
-        mouseOverColor
-    } else {
-        idleColor
-    }
+    // endregion
 
     private fun drawPg() = with(pg) {
         draw {
             clear()
             colorModeHSB()
+            background(patchStyle.bgColor)
+            // draw inputs
             pushPop {
-                rectMode(PConstants.CORNER)
-                fill(bgColor)
-                strokeWeight(strokeW)
-                stroke(getColor())
-                rect(
-                    0f + strokeW,
-                    0f + strokeW,
-                    width.toFloat() - strokeW * 2,
-                    height.toFloat() - strokeW * 2,
-                    cornerRadius,
-                    cornerRadius,
-                    cornerRadius,
-                    cornerRadius
-                )
-            }
-            pushPop {
-                noStroke()
                 fill(getColor())
-                textAlign(PConstants.CENTER, PConstants.CENTER)
-                textSize(20f)
-                translateCenter()
-                text("$text", 0f, 0f)
+                textAlign(PConstants.LEFT, PConstants.TOP)
+                textFont(patchStyle.font)
+                translate(0f, patchStyle.paddingVertical.toFloat())
+                inputs.forEachIndexed { i, input ->
+                    text(input, 0f, i * patchStyle.font.size.toFloat())
+                }
+            }
+
+            // draw outputs
+            pushPop {
+                fill(getColor())
+                textAlign(PConstants.RIGHT, PConstants.TOP)
+                textFont(patchStyle.font)
+                translate(pg.width.toFloat(), patchStyle.paddingVertical.toFloat())
+                outputs.forEachIndexed { i, output ->
+                    text(output, 0f, i * patchStyle.font.size.toFloat())
+                }
             }
         }
     }
 
-    fun draw() {
+    internal fun draw() {
         drawPg()
         sketch.pushPop {
             translate(posX, posY)
@@ -88,7 +74,7 @@ class PatchBox(
     /**
      * Returns [true] if event has been consumed.
      */
-    fun onMouseEvent(event: MouseEvent): Boolean {
+    internal fun onMouseEvent(event: MouseEvent): Boolean {
         val consumed = when {
             event.action == MouseEvent.DRAG && dragState == DragState.DRAGGING -> {
                 posX = cursor.x - dragAnchor.x
@@ -109,5 +95,28 @@ class PatchBox(
 
         isMouseOver = mouseInViewBounds()
         return consumed
+    }
+
+    private fun mouseInViewBounds() = cursor.x in (posX..posX + pg.width)
+            && cursor.y in (posY..posY + pg.height)
+
+    private fun getColor() = if (isMouseOver || dragState == DragState.DRAGGING) {
+        patchStyle.activeColor
+    } else {
+        patchStyle.idleColor
+    }
+
+    private fun calculateHeight(): Int {
+        return patchStyle.paddingVertical * 2 + max(
+            inputs.count() * patchStyle.font.size,
+            outputs.count() * patchStyle.font.size
+        )
+    }
+
+    private fun calculateWidth(): Int {
+        sketch.textFont(patchStyle.font)
+        val inputsWidth = inputs.maxBy { it.count() }?.let { sketch.textWidth(it).toInt() } ?: 0
+        val outputsWidth = outputs.maxBy { it.count() }?.let { sketch.textWidth(it).toInt() } ?: 0
+        return inputsWidth + outputsWidth + 20 // Some space between
     }
 }

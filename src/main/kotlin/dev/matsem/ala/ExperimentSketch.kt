@@ -5,7 +5,6 @@ import dev.matsem.ala.ui.patch.Patcher
 import processing.core.PApplet
 import processing.core.PConstants
 import java.io.File
-import kotlin.random.Random
 
 class ExperimentSketch : PApplet() {
 
@@ -20,11 +19,14 @@ class ExperimentSketch : PApplet() {
         colorModeHSB()
 
         patcher = Patcher(this)
-        repeat(5) {
-            patcher.createPatchBox(
-                Random.nextFloat() * width,
-                Random.nextFloat() * height
-            )
+        repeat(5) { i ->
+            patcher
+                .createPatchBox(
+                    10f,
+                    10f * i,
+                    listOf("Freq", "Amplitude", "Phase", "Fading"),
+                    listOf("Out")
+                )
         }
     }
 
