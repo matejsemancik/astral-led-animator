@@ -31,8 +31,8 @@ class Patcher(private val sketch: PApplet) {
             patchStyle,
             posX,
             posY,
-            inputs.map { "- $it" },
-            outputs.map { "$it -" }
+            inputs,
+            outputs
         ).also { patchBoxes += it }
     }
 

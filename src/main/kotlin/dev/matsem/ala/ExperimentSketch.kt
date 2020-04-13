@@ -23,9 +23,9 @@ class ExperimentSketch : PApplet() {
             patcher
                 .createPatchBox(
                     10f,
-                    10f * i,
+                    10f + i * 100,
                     listOf("Freq", "Amplitude", "Phase", "Fading"),
-                    listOf("Out")
+                    listOf("Left", "Right")
                 )
         }
     }

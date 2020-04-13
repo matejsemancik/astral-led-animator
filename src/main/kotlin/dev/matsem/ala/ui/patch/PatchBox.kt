@@ -34,30 +34,48 @@ class PatchBox(
     private var dragAnchor = PVector(0f, 0f)
     // endregion
 
+    // region Core
+    private val inputPorts = inputs.map { name -> InputPort(name, patchStyle.idleColor) }
+    private val outputPorts = outputs.map { name -> OutputPort(name, patchStyle.idleColor) }
+    // endregion
+
     private fun drawPg() = with(pg) {
         draw {
             clear()
             colorModeHSB()
-            background(patchStyle.bgColor)
+            // Background
+            pushPop {
+                background(patchStyle.bgColor)
+            }
             // draw inputs
             pushPop {
-                fill(getColor())
                 textAlign(PConstants.LEFT, PConstants.TOP)
                 textFont(patchStyle.font)
-                translate(0f, patchStyle.paddingVertical.toFloat())
-                inputs.forEachIndexed { i, input ->
-                    text(input, 0f, i * patchStyle.font.size.toFloat())
+                translate(0f, patchStyle.paddingTop.toFloat())
+                val fontHeight = patchStyle.font.size.toFloat()
+                val portSize = patchStyle.portSize.toFloat()
+                inputPorts.forEachIndexed { i, port ->
+                    val margin = if (i == 0) 0f else patchStyle.textMargin.toFloat()
+                    fill(getColor())
+                    text(port.name, portSize + 2, i * fontHeight + margin * i)
+                    fill(port.color)
+                    rect(0f, i * fontHeight + margin * i, portSize, portSize)
                 }
             }
 
             // draw outputs
             pushPop {
-                fill(getColor())
                 textAlign(PConstants.RIGHT, PConstants.TOP)
                 textFont(patchStyle.font)
-                translate(pg.width.toFloat(), patchStyle.paddingVertical.toFloat())
-                outputs.forEachIndexed { i, output ->
-                    text(output, 0f, i * patchStyle.font.size.toFloat())
+                translate(pg.width.toFloat(), patchStyle.paddingTop.toFloat())
+                val fontHeight = patchStyle.font.size.toFloat()
+                val portSize = patchStyle.portSize.toFloat()
+                outputPorts.forEachIndexed { i, port ->
+                    val margin = if (i == 0) 0f else patchStyle.textMargin.toFloat()
+                    fill(getColor())
+                    text(port.name, 0f - portSize - 2, i * fontHeight + margin * i)
+                    fill(port.color)
+                    rect(0f - portSize, i * fontHeight + margin * i, portSize, portSize)
                 }
             }
         }
@@ -75,7 +93,8 @@ class PatchBox(
      * Returns [true] if event has been consumed.
      */
     internal fun onMouseEvent(event: MouseEvent): Boolean {
-        val consumed = when {
+        isMouseOver = mouseInViewBounds()
+        return when {
             event.action == MouseEvent.DRAG && dragState == DragState.DRAGGING -> {
                 posX = cursor.x - dragAnchor.x
                 posY = cursor.y - dragAnchor.y
@@ -92,9 +111,6 @@ class PatchBox(
             }
             else -> false
         }
-
-        isMouseOver = mouseInViewBounds()
-        return consumed
     }
 
     private fun mouseInViewBounds() = cursor.x in (posX..posX + pg.width)
@@ -107,9 +123,9 @@ class PatchBox(
     }
 
     private fun calculateHeight(): Int {
-        return patchStyle.paddingVertical * 2 + max(
-            inputs.count() * patchStyle.font.size,
-            outputs.count() * patchStyle.font.size
+        return patchStyle.paddingTop + patchStyle.paddingBottom + max(
+            inputs.count() * (patchStyle.font.size + patchStyle.textMargin),
+            outputs.count() * (patchStyle.font.size + patchStyle.textMargin)
         )
     }
 
@@ -117,6 +133,6 @@ class PatchBox(
         sketch.textFont(patchStyle.font)
         val inputsWidth = inputs.maxBy { it.count() }?.let { sketch.textWidth(it).toInt() } ?: 0
         val outputsWidth = outputs.maxBy { it.count() }?.let { sketch.textWidth(it).toInt() } ?: 0
-        return inputsWidth + outputsWidth + 20 // Some space between
+        return inputsWidth + outputsWidth + patchStyle.portSize + 20 // Some space between
     }
 }
