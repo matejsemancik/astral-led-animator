@@ -4,7 +4,7 @@ import processing.core.PApplet
 
 class App {
 
-    private val sketch = MainSketch()
+    private val sketch = ExperimentSketch()
 
     fun run() {
         val args = arrayOf("MainSketch")
