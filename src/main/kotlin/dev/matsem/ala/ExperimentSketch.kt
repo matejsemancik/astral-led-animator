@@ -1,9 +1,6 @@
 package dev.matsem.ala
 
-import dev.matsem.ala.tools.extensions.colorModeHSB
-import dev.matsem.ala.tools.extensions.constrain
-import dev.matsem.ala.tools.extensions.draw
-import dev.matsem.ala.tools.extensions.pushPop
+import dev.matsem.ala.tools.extensions.*
 import processing.core.PApplet
 import processing.core.PConstants
 import processing.core.PGraphics
@@ -12,7 +9,12 @@ import processing.event.MouseEvent
 import java.io.File
 import kotlin.random.Random
 
-class PatchBox(private val sketch: PApplet, private var posX: Float = 0f, private var posY: Float = 0f) : PConstants {
+class PatchBox(
+    private val sketch: PApplet,
+    private var posX: Float = 0f,
+    private var posY: Float = 0f,
+    private var z: Int
+) : PConstants {
 
     enum class DragState {
         DRAGGING, IDLE
@@ -51,6 +53,12 @@ class PatchBox(private val sketch: PApplet, private var posX: Float = 0f, privat
         posY = posY.constrain(low = 0f, high = height.toFloat() - 10f)
     }
 
+    private fun getColor() = if (isMouseOver || dragState == DragState.DRAGGING) {
+        mouseOverColor
+    } else {
+        idleColor
+    }
+
     private fun drawPg() = with(pg) {
         draw {
             clear()
@@ -59,11 +67,7 @@ class PatchBox(private val sketch: PApplet, private var posX: Float = 0f, privat
                 rectMode(PConstants.CORNER)
                 noFill()
                 strokeWeight(strokeW)
-                if (isMouseOver || dragState == DragState.DRAGGING) {
-                    stroke(mouseOverColor)
-                } else {
-                    stroke(idleColor)
-                }
+                stroke(getColor())
                 rect(
                     0f + strokeW,
                     0f + strokeW,
@@ -74,6 +78,14 @@ class PatchBox(private val sketch: PApplet, private var posX: Float = 0f, privat
                     cornerRadius,
                     cornerRadius
                 )
+            }
+            pushPop {
+                noStroke()
+                fill(getColor())
+                textAlign(PConstants.CENTER, PConstants.CENTER)
+                textSize(20f)
+                translateCenter()
+                text("$z", 0f, 0f)
             }
         }
     }
@@ -115,7 +127,12 @@ class ExperimentSketch : PApplet() {
         colorModeHSB()
         patchBoxes.apply {
             repeat(5) {
-                patchBoxes += PatchBox(this@ExperimentSketch, Random.nextFloat() * width, Random.nextFloat() * height)
+                patchBoxes += PatchBox(
+                    this@ExperimentSketch,
+                    Random.nextFloat() * width,
+                    Random.nextFloat() * height,
+                    it
+                )
             }
         }
     }
