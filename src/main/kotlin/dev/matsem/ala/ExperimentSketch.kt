@@ -9,11 +9,58 @@ import processing.event.MouseEvent
 import java.io.File
 import kotlin.random.Random
 
+class Patcher(private val sketch: PApplet) {
+
+    private val patchBoxes = mutableListOf<PatchBox>()
+    private var focusedView: PatchBox? = null
+
+    init {
+        sketch.registerMethod("mouseEvent", this)
+        sketch.registerMethod("draw", this)
+    }
+
+    fun createPatchBox(posX: Float, posY: Float): PatchBox {
+        return PatchBox(
+            sketch,
+            posX,
+            posY,
+            "${patchBoxes.size}"
+        ).also { patchBoxes += it }
+    }
+
+    fun mouseEvent(event: MouseEvent) {
+        val stillFocused = focusedView?.onMouseEvent(event) ?: false
+        if (!stillFocused) {
+            focusedView = null
+
+            loop@ for (box in patchBoxes) {
+                if (box.onMouseEvent(event)) {
+                    focusedView = box
+                    println("focused view changed to: ${box.text}")
+                    break@loop
+                }
+            }
+
+            focusedView?.let { focusedView ->
+                println("changing focus order")
+                patchBoxes.sortBy { if (it == focusedView) 1 else 0 }
+                println("new focus order: ${patchBoxes.joinToString { it.text }}")
+            }
+        }
+    }
+
+    fun draw() {
+        sketch.hint(PConstants.DISABLE_DEPTH_TEST)
+        patchBoxes.forEach { it.draw() }
+        sketch.hint(PConstants.ENABLE_DEPTH_TEST)
+    }
+}
+
 class PatchBox(
     private val sketch: PApplet,
     private var posX: Float = 0f,
     private var posY: Float = 0f,
-    private var z: Int
+    val text: String
 ) : PConstants {
 
     enum class DragState {
@@ -26,6 +73,7 @@ class PatchBox(
     private val cornerRadius = 4f
     private val idleColor = sketch.color(0f, 0f, 80f)
     private val mouseOverColor = sketch.color(0f, 0f, 100f)
+    private val bgColor = sketch.color(Random.nextFloat() * 360f, 50f, 50f)
 
     private var isMouseOver: Boolean = false
     private var dragState = DragState.IDLE
@@ -33,22 +81,12 @@ class PatchBox(
 
     val pg: PGraphics = sketch.createGraphics(width, height, PConstants.P2D)
 
-    init {
-        sketch.registerMethod("draw", this)
-        sketch.registerMethod("mouseEvent", this)
-    }
-
     private fun updateState() {
-        isMouseOver =
-            sketch.mouseX.toFloat() in (posX..posX + width) && sketch.mouseY.toFloat() in (posY..posY + height)
-
-        if (dragState == DragState.DRAGGING) {
-            posX = sketch.mouseX - dragAnchor.x
-            posY = sketch.mouseY - dragAnchor.y
-        }
-
         constrainPosition()
     }
+
+    fun mouseInViewBounds() = sketch.mouseX.toFloat() in (posX..posX + width)
+            && sketch.mouseY.toFloat() in (posY..posY + height)
 
     private fun constrainPosition() = with(sketch) {
         posX = posX.constrain(low = 0f, high = width.toFloat() - 10f)
@@ -67,7 +105,7 @@ class PatchBox(
             colorModeHSB()
             pushPop {
                 rectMode(PConstants.CORNER)
-                noFill()
+                fill(bgColor)
                 strokeWeight(strokeW)
                 stroke(getColor())
                 rect(
@@ -87,7 +125,7 @@ class PatchBox(
                 textAlign(PConstants.CENTER, PConstants.CENTER)
                 textSize(20f)
                 translateCenter()
-                text("$z", 0f, 0f)
+                text("$text", 0f, 0f)
             }
         }
     }
@@ -96,29 +134,41 @@ class PatchBox(
         updateState()
         drawPg()
         sketch.pushPop {
-            hint(PConstants.DISABLE_DEPTH_TEST)
             translate(posX, posY)
             image(pg, 0f, 0f)
-            hint(PConstants.ENABLE_DEPTH_TEST)
         }
     }
 
-    fun mouseEvent(event: MouseEvent) {
-        when {
+    /**
+     * Returns [true] if event has been consumed.
+     */
+    fun onMouseEvent(event: MouseEvent): Boolean {
+        val consumed = when {
+            event.action == MouseEvent.DRAG && dragState == DragState.DRAGGING -> {
+                posX = sketch.mouseX - dragAnchor.x
+                posY = sketch.mouseY - dragAnchor.y
+                true
+            }
             event.action == MouseEvent.PRESS && isMouseOver -> {
                 dragState = DragState.DRAGGING
                 dragAnchor = PVector(sketch.mouseX - posX, sketch.mouseY - posY)
+                true
             }
             event.action == MouseEvent.RELEASE && dragState == DragState.DRAGGING -> {
                 dragState = DragState.IDLE
+                true
             }
+            else -> false
         }
+
+        isMouseOver = mouseInViewBounds()
+        return consumed
     }
 }
 
 class ExperimentSketch : PApplet() {
 
-    val patchBoxes = mutableListOf<PatchBox>()
+    lateinit var patcher: Patcher
 
     override fun settings() {
         size(1280, 720, PConstants.P3D)
@@ -127,15 +177,13 @@ class ExperimentSketch : PApplet() {
     override fun setup() {
         surface.setResizable(true)
         colorModeHSB()
-        patchBoxes.apply {
-            repeat(5) {
-                patchBoxes += PatchBox(
-                    this@ExperimentSketch,
-                    Random.nextFloat() * width,
-                    Random.nextFloat() * height,
-                    it
-                )
-            }
+
+        patcher = Patcher(this)
+        repeat(5) {
+            patcher.createPatchBox(
+                Random.nextFloat() * width,
+                Random.nextFloat() * height
+            )
         }
     }
 
