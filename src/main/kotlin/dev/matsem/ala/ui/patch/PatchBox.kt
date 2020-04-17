@@ -3,6 +3,7 @@ package dev.matsem.ala.ui.patch
 import dev.matsem.ala.tools.extensions.colorModeHSB
 import dev.matsem.ala.tools.extensions.draw
 import dev.matsem.ala.tools.extensions.pushPop
+import dev.matsem.ala.tools.extensions.withAlpha
 import processing.core.PApplet
 import processing.core.PConstants
 import processing.core.PFont
@@ -30,9 +31,10 @@ class PatchBox(
     private val paddingBottom: Int = 10
     private val textMargin: Int = 4
     private val portSize: Int = 8
-    private val bgColor: Int = 0x181818 or (0xff shl 24)
-    private val idleColor: Int = 0xe0e0e0 or (0xff shl 24)
-    private val activeColor: Int = 0xff00ff or (0xff shl 24)
+    private val bgColor: Int = 0x181818.withAlpha()
+    private val idleColor: Int = 0xe0e0e0.withAlpha()
+    private val activeColor: Int = 0xffffff.withAlpha()
+    private val portSelectedColor = 0xeba434.withAlpha()
 
     private var pg: PGraphics = sketch.createGraphics(calculateWidth(), calculateHeight(), PConstants.P2D)
     // endregion
@@ -74,7 +76,7 @@ class PatchBox(
                 textAlign(PConstants.LEFT, PConstants.TOP)
                 textFont(font)
                 inputPorts.forEach {
-                    fill(if (selectedInput == it) activeColor else idleColor)
+                    fill(if (selectedInput == it) portSelectedColor else getColor())
                     rect(it.x, it.y, it.size, it.size)
                     fill(getColor())
                     text(it.name, it.x + it.size + 2, it.y)
@@ -86,7 +88,7 @@ class PatchBox(
                 textAlign(PConstants.RIGHT, PConstants.TOP)
                 textFont(font)
                 outputPorts.forEach {
-                    fill(if (selectedOutput == it) activeColor else idleColor)
+                    fill(if (selectedOutput == it) portSelectedColor else getColor())
                     rect(it.x, it.y, it.size, it.size)
                     fill(getColor())
                     text(it.name, it.x - 2, it.y)

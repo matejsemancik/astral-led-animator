@@ -22,3 +22,5 @@ inline val Int.rgbRed get() = this shr 16 and 0xff
 inline val Int.rgbGreen get() = this shr 8 and 0xff
 
 inline val Int.rgbBlue get() = this and 0xff
+
+fun Int.withAlpha(alpha: Int = 255) = this or (alpha shl 24)
