@@ -32,11 +32,8 @@ class PatchBox(
     private var isMouseOver: Boolean = false
     private var dragState = DragState.IDLE
     private var dragAnchor = PVector(0f, 0f)
-    // endregion
-
-    // region Core
-    private val inputPorts = inputs.map { name -> InputPort(name, patchStyle.idleColor) }
-    private val outputPorts = outputs.map { name -> OutputPort(name, patchStyle.idleColor) }
+    private var selectedInput: String? = null
+    private var selectedOutput: String? = null
     // endregion
 
     private fun drawPg() = with(pg) {
@@ -54,12 +51,12 @@ class PatchBox(
                 translate(0f, patchStyle.paddingTop.toFloat())
                 val fontHeight = patchStyle.font.size.toFloat()
                 val portSize = patchStyle.portSize.toFloat()
-                inputPorts.forEachIndexed { i, port ->
+                inputs.forEachIndexed { i, input ->
                     val margin = if (i == 0) 0f else patchStyle.textMargin.toFloat()
-                    fill(getColor())
-                    text(port.name, portSize + 2, i * fontHeight + margin * i)
-                    fill(port.color)
+                    fill(if (input == selectedInput) patchStyle.activeColor else patchStyle.idleColor)
                     rect(0f, i * fontHeight + margin * i, portSize, portSize)
+                    fill(getColor())
+                    text(input, portSize + 2, i * fontHeight + margin * i)
                 }
             }
 
@@ -70,12 +67,12 @@ class PatchBox(
                 translate(pg.width.toFloat(), patchStyle.paddingTop.toFloat())
                 val fontHeight = patchStyle.font.size.toFloat()
                 val portSize = patchStyle.portSize.toFloat()
-                outputPorts.forEachIndexed { i, port ->
+                outputs.forEachIndexed { i, output ->
                     val margin = if (i == 0) 0f else patchStyle.textMargin.toFloat()
-                    fill(getColor())
-                    text(port.name, 0f - portSize - 2, i * fontHeight + margin * i)
-                    fill(port.color)
+                    fill(if (output == selectedOutput) patchStyle.activeColor else patchStyle.idleColor)
                     rect(0f - portSize, i * fontHeight + margin * i, portSize, portSize)
+                    fill(getColor())
+                    text(output, 0f - portSize - 2, i * fontHeight + margin * i)
                 }
             }
         }
@@ -94,6 +91,10 @@ class PatchBox(
      */
     internal fun onMouseEvent(event: MouseEvent): Boolean {
         isMouseOver = mouseInViewBounds()
+        if (isMouseOver) {
+            selectedInput = findSelectedInput()
+            selectedOutput = findSelectedOutput()
+        }
         return when {
             event.action == MouseEvent.DRAG && dragState == DragState.DRAGGING -> {
                 posX = cursor.x - dragAnchor.x
@@ -116,6 +117,34 @@ class PatchBox(
     private fun mouseInViewBounds() = cursor.x in (posX..posX + pg.width)
             && cursor.y in (posY..posY + pg.height)
 
+    private fun findSelectedInput(): String? {
+        val paddingTop = patchStyle.paddingTop
+        inputs.forEachIndexed { i, input ->
+            val margin = if (i == 0) 0f else patchStyle.textMargin.toFloat()
+            val portX = 0f
+            val portY = i * patchStyle.font.size + margin * i + paddingTop
+            val portSize = patchStyle.portSize.toFloat()
+            if (cursor.relative().x in portX..(portX + portSize) && cursor.relative().y in portY..(portY + portSize)) {
+                return input
+            }
+        }
+        return null
+    }
+
+    private fun findSelectedOutput(): String? {
+        val paddingTop = patchStyle.paddingTop
+        outputs.forEachIndexed { i, output ->
+            val margin = if (i == 0) 0f else patchStyle.textMargin.toFloat()
+            val portX = pg.width.toFloat() - patchStyle.portSize
+            val portY = i * patchStyle.font.size + margin * i + paddingTop
+            val portSize = patchStyle.portSize.toFloat()
+            if (cursor.relative().x in portX..(portX + portSize) && cursor.relative().y in portY..(portY + portSize)) {
+                return output
+            }
+        }
+        return null
+    }
+
     private fun getColor() = if (isMouseOver || dragState == DragState.DRAGGING) {
         patchStyle.activeColor
     } else {
@@ -135,4 +164,6 @@ class PatchBox(
         val outputsWidth = outputs.maxBy { it.count() }?.let { sketch.textWidth(it).toInt() } ?: 0
         return inputsWidth + outputsWidth + patchStyle.portSize + 20 // Some space between
     }
+
+    private fun Cursor.relative() = this.copy(x = x - posX, y = y - posY)
 }
