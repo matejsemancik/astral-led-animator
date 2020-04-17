@@ -15,7 +15,6 @@ class Patcher(private val sketch: PApplet) {
     private var isPanning = false
     private var panX = 0f
     private var panY = 0f
-    private val patchStyle = PatchStyle()
     private val font: PFont = sketch.createFont("fonts/pixelmix/pixelmix.ttf", 12f, false)
 
     init {
@@ -27,7 +26,6 @@ class Patcher(private val sketch: PApplet) {
         return PatchBox(
             sketch,
             cursor,
-            patchStyle,
             font,
             posX,
             posY,

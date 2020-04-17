@@ -14,7 +14,6 @@ import kotlin.math.max
 class PatchBox(
     private val sketch: PApplet,
     private val cursor: Cursor,
-    private val patchStyle: PatchStyle,
     private val font: PFont,
     private var posX: Float = 0f,
     private var posY: Float = 0f,
@@ -27,6 +26,14 @@ class PatchBox(
     }
 
     // region Drawing
+    private val paddingTop: Int = 10
+    private val paddingBottom: Int = 10
+    private val textMargin: Int = 4
+    private val portSize: Int = 8
+    private val bgColor: Int = 0x181818 or (0xff shl 24)
+    private val idleColor: Int = 0xe0e0e0 or (0xff shl 24)
+    private val activeColor: Int = 0xff00ff or (0xff shl 24)
+
     private var pg: PGraphics = sketch.createGraphics(calculateWidth(), calculateHeight(), PConstants.P2D)
     // endregion
 
@@ -44,18 +51,18 @@ class PatchBox(
             colorModeHSB()
             // Background
             pushPop {
-                background(patchStyle.bgColor)
+                background(bgColor)
             }
             // draw inputs
             pushPop {
                 textAlign(PConstants.LEFT, PConstants.TOP)
                 textFont(font)
-                translate(0f, patchStyle.paddingTop.toFloat())
+                translate(0f, paddingTop.toFloat())
                 val fontHeight = font.size.toFloat()
-                val portSize = patchStyle.portSize.toFloat()
+                val portSize = portSize.toFloat()
                 inputs.forEachIndexed { i, input ->
-                    val margin = if (i == 0) 0f else patchStyle.textMargin.toFloat()
-                    fill(if (input == selectedInput) patchStyle.activeColor else patchStyle.idleColor)
+                    val margin = if (i == 0) 0f else textMargin.toFloat()
+                    fill(if (input == selectedInput) activeColor else idleColor)
                     rect(0f, i * fontHeight + margin * i, portSize, portSize)
                     fill(getColor())
                     text(input, portSize + 2, i * fontHeight + margin * i)
@@ -66,12 +73,12 @@ class PatchBox(
             pushPop {
                 textAlign(PConstants.RIGHT, PConstants.TOP)
                 textFont(font)
-                translate(pg.width.toFloat(), patchStyle.paddingTop.toFloat())
+                translate(pg.width.toFloat(), paddingTop.toFloat())
                 val fontHeight = font.size.toFloat()
-                val portSize = patchStyle.portSize.toFloat()
+                val portSize = portSize.toFloat()
                 outputs.forEachIndexed { i, output ->
-                    val margin = if (i == 0) 0f else patchStyle.textMargin.toFloat()
-                    fill(if (output == selectedOutput) patchStyle.activeColor else patchStyle.idleColor)
+                    val margin = if (i == 0) 0f else textMargin.toFloat()
+                    fill(if (output == selectedOutput) activeColor else idleColor)
                     rect(0f - portSize, i * fontHeight + margin * i, portSize, portSize)
                     fill(getColor())
                     text(output, 0f - portSize - 2, i * fontHeight + margin * i)
@@ -120,12 +127,12 @@ class PatchBox(
             && cursor.y in (posY..posY + pg.height)
 
     private fun findSelectedInput(): String? {
-        val paddingTop = patchStyle.paddingTop
+        val paddingTop = paddingTop
         inputs.forEachIndexed { i, input ->
-            val margin = if (i == 0) 0f else patchStyle.textMargin.toFloat()
+            val margin = if (i == 0) 0f else textMargin.toFloat()
             val portX = 0f
             val portY = i * font.size + margin * i + paddingTop
-            val portSize = patchStyle.portSize.toFloat()
+            val portSize = portSize.toFloat()
             if (cursor.relative().x in portX..(portX + portSize) && cursor.relative().y in portY..(portY + portSize)) {
                 return input
             }
@@ -134,12 +141,12 @@ class PatchBox(
     }
 
     private fun findSelectedOutput(): String? {
-        val paddingTop = patchStyle.paddingTop
+        val paddingTop = paddingTop
         outputs.forEachIndexed { i, output ->
-            val margin = if (i == 0) 0f else patchStyle.textMargin.toFloat()
-            val portX = pg.width.toFloat() - patchStyle.portSize
+            val margin = if (i == 0) 0f else textMargin.toFloat()
+            val portX = pg.width.toFloat() - portSize
             val portY = i * font.size + margin * i + paddingTop
-            val portSize = patchStyle.portSize.toFloat()
+            val portSize = portSize.toFloat()
             if (cursor.relative().x in portX..(portX + portSize) && cursor.relative().y in portY..(portY + portSize)) {
                 return output
             }
@@ -148,15 +155,15 @@ class PatchBox(
     }
 
     private fun getColor() = if (isMouseOver || dragState == DragState.DRAGGING) {
-        patchStyle.activeColor
+        activeColor
     } else {
-        patchStyle.idleColor
+        idleColor
     }
 
     private fun calculateHeight(): Int {
-        return patchStyle.paddingTop + patchStyle.paddingBottom + max(
-            inputs.count() * (font.size + patchStyle.textMargin),
-            outputs.count() * (font.size + patchStyle.textMargin)
+        return paddingTop + paddingBottom + max(
+            inputs.count() * (font.size + textMargin),
+            outputs.count() * (font.size + textMargin)
         )
     }
 
@@ -164,7 +171,7 @@ class PatchBox(
         sketch.textFont(font)
         val inputsWidth = inputs.maxBy { it.count() }?.let { sketch.textWidth(it).toInt() } ?: 0
         val outputsWidth = outputs.maxBy { it.count() }?.let { sketch.textWidth(it).toInt() } ?: 0
-        return inputsWidth + outputsWidth + patchStyle.portSize + 20 // Some space between
+        return inputsWidth + outputsWidth + portSize + 20 // Some space between
     }
 
     private fun Cursor.relative() = this.copy(x = x - posX, y = y - posY)
