@@ -5,6 +5,7 @@ import dev.matsem.ala.tools.extensions.draw
 import dev.matsem.ala.tools.extensions.pushPop
 import processing.core.PApplet
 import processing.core.PConstants
+import processing.core.PFont
 import processing.core.PGraphics
 import processing.core.PVector
 import processing.event.MouseEvent
@@ -14,6 +15,7 @@ class PatchBox(
     private val sketch: PApplet,
     private val cursor: Cursor,
     private val patchStyle: PatchStyle,
+    private val font: PFont,
     private var posX: Float = 0f,
     private var posY: Float = 0f,
     private val inputs: List<String>,
@@ -47,9 +49,9 @@ class PatchBox(
             // draw inputs
             pushPop {
                 textAlign(PConstants.LEFT, PConstants.TOP)
-                textFont(patchStyle.font)
+                textFont(font)
                 translate(0f, patchStyle.paddingTop.toFloat())
-                val fontHeight = patchStyle.font.size.toFloat()
+                val fontHeight = font.size.toFloat()
                 val portSize = patchStyle.portSize.toFloat()
                 inputs.forEachIndexed { i, input ->
                     val margin = if (i == 0) 0f else patchStyle.textMargin.toFloat()
@@ -63,9 +65,9 @@ class PatchBox(
             // draw outputs
             pushPop {
                 textAlign(PConstants.RIGHT, PConstants.TOP)
-                textFont(patchStyle.font)
+                textFont(font)
                 translate(pg.width.toFloat(), patchStyle.paddingTop.toFloat())
-                val fontHeight = patchStyle.font.size.toFloat()
+                val fontHeight = font.size.toFloat()
                 val portSize = patchStyle.portSize.toFloat()
                 outputs.forEachIndexed { i, output ->
                     val margin = if (i == 0) 0f else patchStyle.textMargin.toFloat()
@@ -122,7 +124,7 @@ class PatchBox(
         inputs.forEachIndexed { i, input ->
             val margin = if (i == 0) 0f else patchStyle.textMargin.toFloat()
             val portX = 0f
-            val portY = i * patchStyle.font.size + margin * i + paddingTop
+            val portY = i * font.size + margin * i + paddingTop
             val portSize = patchStyle.portSize.toFloat()
             if (cursor.relative().x in portX..(portX + portSize) && cursor.relative().y in portY..(portY + portSize)) {
                 return input
@@ -136,7 +138,7 @@ class PatchBox(
         outputs.forEachIndexed { i, output ->
             val margin = if (i == 0) 0f else patchStyle.textMargin.toFloat()
             val portX = pg.width.toFloat() - patchStyle.portSize
-            val portY = i * patchStyle.font.size + margin * i + paddingTop
+            val portY = i * font.size + margin * i + paddingTop
             val portSize = patchStyle.portSize.toFloat()
             if (cursor.relative().x in portX..(portX + portSize) && cursor.relative().y in portY..(portY + portSize)) {
                 return output
@@ -153,13 +155,13 @@ class PatchBox(
 
     private fun calculateHeight(): Int {
         return patchStyle.paddingTop + patchStyle.paddingBottom + max(
-            inputs.count() * (patchStyle.font.size + patchStyle.textMargin),
-            outputs.count() * (patchStyle.font.size + patchStyle.textMargin)
+            inputs.count() * (font.size + patchStyle.textMargin),
+            outputs.count() * (font.size + patchStyle.textMargin)
         )
     }
 
     private fun calculateWidth(): Int {
-        sketch.textFont(patchStyle.font)
+        sketch.textFont(font)
         val inputsWidth = inputs.maxBy { it.count() }?.let { sketch.textWidth(it).toInt() } ?: 0
         val outputsWidth = outputs.maxBy { it.count() }?.let { sketch.textWidth(it).toInt() } ?: 0
         return inputsWidth + outputsWidth + patchStyle.portSize + 20 // Some space between

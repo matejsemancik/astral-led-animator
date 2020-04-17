@@ -3,6 +3,7 @@ package dev.matsem.ala.ui.patch
 import dev.matsem.ala.tools.extensions.pushPop
 import processing.core.PApplet
 import processing.core.PConstants
+import processing.core.PFont
 import processing.event.MouseEvent
 
 class Patcher(private val sketch: PApplet) {
@@ -14,14 +15,12 @@ class Patcher(private val sketch: PApplet) {
     private var isPanning = false
     private var panX = 0f
     private var panY = 0f
-    private val patchStyle: PatchStyle
+    private val patchStyle = PatchStyle()
+    private val font: PFont = sketch.createFont("fonts/pixelmix/pixelmix.ttf", 12f, false)
 
     init {
         sketch.registerMethod("mouseEvent", this)
         sketch.registerMethod("draw", this)
-
-        val font = sketch.createFont("fonts/pixelmix/pixelmix.ttf", 12f, false)
-        patchStyle = PatchStyle(font = font)
     }
 
     fun createPatchBox(posX: Float, posY: Float, inputs: List<String>, outputs: List<String>): PatchBox {
@@ -29,6 +28,7 @@ class Patcher(private val sketch: PApplet) {
             sketch,
             cursor,
             patchStyle,
+            font,
             posX,
             posY,
             inputs,
