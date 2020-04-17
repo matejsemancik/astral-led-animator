@@ -41,8 +41,24 @@ class PatchBox(
     private var isMouseOver: Boolean = false
     private var dragState = DragState.IDLE
     private var dragAnchor = PVector(0f, 0f)
-    private var selectedInput: String? = null
-    private var selectedOutput: String? = null
+    private var selectedInput: InputPort? = null
+    private var selectedOutput: OutputPort? = null
+    // endregion
+
+    // region Core
+    private val inputPorts = inputs.mapIndexed { i, name ->
+        val margin = if (i == 0) 0f else textMargin.toFloat()
+        val portX = 0f
+        val portY = i * font.size + margin * i + paddingTop
+        InputPort(name, portX, portY, portSize.toFloat())
+    }
+
+    private val outputPorts = outputs.mapIndexed { i, name ->
+        val margin = if (i == 0) 0f else textMargin.toFloat()
+        val portX = pg.width.toFloat() - portSize
+        val portY = i * font.size + margin * i + paddingTop
+        OutputPort(name, portX, portY, portSize.toFloat())
+    }
     // endregion
 
     private fun drawPg() = with(pg) {
@@ -57,15 +73,11 @@ class PatchBox(
             pushPop {
                 textAlign(PConstants.LEFT, PConstants.TOP)
                 textFont(font)
-                translate(0f, paddingTop.toFloat())
-                val fontHeight = font.size.toFloat()
-                val portSize = portSize.toFloat()
-                inputs.forEachIndexed { i, input ->
-                    val margin = if (i == 0) 0f else textMargin.toFloat()
-                    fill(if (input == selectedInput) activeColor else idleColor)
-                    rect(0f, i * fontHeight + margin * i, portSize, portSize)
+                inputPorts.forEach {
+                    fill(if (selectedInput == it) activeColor else idleColor)
+                    rect(it.x, it.y, it.size, it.size)
                     fill(getColor())
-                    text(input, portSize + 2, i * fontHeight + margin * i)
+                    text(it.name, it.x + it.size + 2, it.y)
                 }
             }
 
@@ -73,15 +85,11 @@ class PatchBox(
             pushPop {
                 textAlign(PConstants.RIGHT, PConstants.TOP)
                 textFont(font)
-                translate(pg.width.toFloat(), paddingTop.toFloat())
-                val fontHeight = font.size.toFloat()
-                val portSize = portSize.toFloat()
-                outputs.forEachIndexed { i, output ->
-                    val margin = if (i == 0) 0f else textMargin.toFloat()
-                    fill(if (output == selectedOutput) activeColor else idleColor)
-                    rect(0f - portSize, i * fontHeight + margin * i, portSize, portSize)
+                outputPorts.forEach {
+                    fill(if (selectedOutput == it) activeColor else idleColor)
+                    rect(it.x, it.y, it.size, it.size)
                     fill(getColor())
-                    text(output, 0f - portSize - 2, i * fontHeight + margin * i)
+                    text(it.name, it.x - 2, it.y)
                 }
             }
         }
@@ -126,29 +134,19 @@ class PatchBox(
     private fun mouseInViewBounds() = cursor.x in (posX..posX + pg.width)
             && cursor.y in (posY..posY + pg.height)
 
-    private fun findSelectedInput(): String? {
-        val paddingTop = paddingTop
-        inputs.forEachIndexed { i, input ->
-            val margin = if (i == 0) 0f else textMargin.toFloat()
-            val portX = 0f
-            val portY = i * font.size + margin * i + paddingTop
-            val portSize = portSize.toFloat()
-            if (cursor.relative().x in portX..(portX + portSize) && cursor.relative().y in portY..(portY + portSize)) {
-                return input
+    private fun findSelectedInput(): InputPort? {
+        inputPorts.forEach {
+            if (cursor.relative().x in it.x..it.x.plus(it.size) && cursor.relative().y in it.y..it.y.plus(it.size)) {
+                return it
             }
         }
         return null
     }
 
-    private fun findSelectedOutput(): String? {
-        val paddingTop = paddingTop
-        outputs.forEachIndexed { i, output ->
-            val margin = if (i == 0) 0f else textMargin.toFloat()
-            val portX = pg.width.toFloat() - portSize
-            val portY = i * font.size + margin * i + paddingTop
-            val portSize = portSize.toFloat()
-            if (cursor.relative().x in portX..(portX + portSize) && cursor.relative().y in portY..(portY + portSize)) {
-                return output
+    private fun findSelectedOutput(): OutputPort? {
+        outputPorts.forEach {
+            if (cursor.relative().x in it.x..it.x.plus(it.size) && cursor.relative().y in it.y..it.y.plus(it.size)) {
+                return it
             }
         }
         return null
