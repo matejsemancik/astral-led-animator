@@ -2,6 +2,9 @@ package dev.matsem.ala.ui.patch
 
 import dev.matsem.ala.tools.extensions.colorModeHSB
 import dev.matsem.ala.tools.extensions.draw
+import dev.matsem.ala.tools.extensions.isDrag
+import dev.matsem.ala.tools.extensions.isLeftPress
+import dev.matsem.ala.tools.extensions.isRelease
 import dev.matsem.ala.tools.extensions.pushPop
 import dev.matsem.ala.tools.extensions.withAlpha
 import processing.core.PApplet
@@ -14,10 +17,11 @@ import kotlin.math.max
 
 class PatchBox(
     private val sketch: PApplet,
+    private val patcher: Patcher,
     private val cursor: Cursor,
     private val font: PFont,
-    private var posX: Float = 0f,
-    private var posY: Float = 0f,
+    var posX: Float = 0f,
+    var posY: Float = 0f,
     private val inputs: List<String>,
     private val outputs: List<String>
 ) : PConstants {
@@ -34,7 +38,6 @@ class PatchBox(
     private val bgColor: Int = 0x181818.withAlpha()
     private val idleColor: Int = 0xe0e0e0.withAlpha()
     private val activeColor: Int = 0xffffff.withAlpha()
-    private val portSelectedColor = 0xffaa00.withAlpha()
 
     private var pg: PGraphics = sketch.createGraphics(calculateWidth(), calculateHeight(), PConstants.P2D)
     // endregion
@@ -63,6 +66,16 @@ class PatchBox(
     }
     // endregion
 
+    fun findMouseTargetFor(sourcePort: PatchPort): PatchPort? {
+        return findMouseOverPort()?.let { possibleTarget ->
+            when {
+                sourcePort is OutputPort && possibleTarget is OutputPort -> null
+                sourcePort is InputPort && possibleTarget is InputPort -> null
+                else -> possibleTarget
+            }
+        }
+    }
+
     private fun drawPg() = with(pg) {
         draw {
             clear()
@@ -76,7 +89,7 @@ class PatchBox(
                 textAlign(PConstants.LEFT, PConstants.TOP)
                 textFont(font)
                 inputPorts.forEach {
-                    fill(if (selectedInput == it) portSelectedColor else getColor())
+                    fill(getColor())
                     rect(it.x, it.y, it.size, it.size)
                     fill(getColor())
                     text(it.name, it.x + it.size + 2, it.y)
@@ -88,7 +101,7 @@ class PatchBox(
                 textAlign(PConstants.RIGHT, PConstants.TOP)
                 textFont(font)
                 outputPorts.forEach {
-                    fill(if (selectedOutput == it) portSelectedColor else getColor())
+                    fill(getColor())
                     rect(it.x, it.y, it.size, it.size)
                     fill(getColor())
                     text(it.name, it.x - 2, it.y)
@@ -110,22 +123,28 @@ class PatchBox(
      */
     internal fun onMouseEvent(event: MouseEvent): Boolean {
         isMouseOver = mouseInViewBounds()
-        if (isMouseOver) {
-            selectedInput = findSelectedInput()
-            selectedOutput = findSelectedOutput()
-        }
+        selectedInput = findMouseOverPort() as? InputPort
+        selectedOutput = findMouseOverPort() as? OutputPort
         return when {
-            event.action == MouseEvent.DRAG && dragState == DragState.DRAGGING -> {
+            event.isLeftPress() && selectedOutput != null -> {
+                patcher.onConnectionStartDrag(this, selectedOutput!!)
+                true
+            }
+            event.isLeftPress() && selectedInput != null -> {
+                patcher.onConnectionStartDrag(this, selectedInput!!)
+                true
+            }
+            event.isDrag() && dragState == DragState.DRAGGING -> {
                 posX = cursor.x - dragAnchor.x
                 posY = cursor.y - dragAnchor.y
                 true
             }
-            event.action == MouseEvent.PRESS && isMouseOver && event.button == PConstants.LEFT -> {
+            event.isLeftPress() && isMouseOver -> {
                 dragState = DragState.DRAGGING
                 dragAnchor = PVector(cursor.x - posX, cursor.y - posY)
                 true
             }
-            event.action == MouseEvent.RELEASE && dragState == DragState.DRAGGING -> {
+            event.isRelease() && dragState == DragState.DRAGGING -> {
                 dragState = DragState.IDLE
                 true
             }
@@ -136,17 +155,8 @@ class PatchBox(
     private fun mouseInViewBounds() = cursor.x in (posX..posX + pg.width)
             && cursor.y in (posY..posY + pg.height)
 
-    private fun findSelectedInput(): InputPort? {
-        inputPorts.forEach {
-            if (cursor.relative().x in it.x..it.x.plus(it.size) && cursor.relative().y in it.y..it.y.plus(it.size)) {
-                return it
-            }
-        }
-        return null
-    }
-
-    private fun findSelectedOutput(): OutputPort? {
-        outputPorts.forEach {
+    private fun findMouseOverPort(): PatchPort? {
+        (inputPorts + outputPorts).forEach {
             if (cursor.relative().x in it.x..it.x.plus(it.size) && cursor.relative().y in it.y..it.y.plus(it.size)) {
                 return it
             }
