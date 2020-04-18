@@ -34,7 +34,7 @@ class PatchBox(
     private val bgColor: Int = 0x181818.withAlpha()
     private val idleColor: Int = 0xe0e0e0.withAlpha()
     private val activeColor: Int = 0xffffff.withAlpha()
-    private val portSelectedColor = 0xeba434.withAlpha()
+    private val portSelectedColor = 0xffaa00.withAlpha()
 
     private var pg: PGraphics = sketch.createGraphics(calculateWidth(), calculateHeight(), PConstants.P2D)
     // endregion
