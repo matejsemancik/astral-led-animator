@@ -3,7 +3,6 @@ package dev.matsem.ala
 import ch.bildspur.artnet.ArtNetClient
 import ddf.minim.Minim
 import ddf.minim.ugens.Constant
-import ddf.minim.ugens.Multiplier
 import ddf.minim.ugens.Sink
 import dev.matsem.ala.generators.BaseGenerator
 import dev.matsem.ala.generators.GameOfLifeGenerator
