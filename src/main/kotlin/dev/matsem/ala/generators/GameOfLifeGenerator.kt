@@ -2,6 +2,7 @@ package dev.matsem.ala.generators
 
 import ddf.minim.AudioInput
 import ddf.minim.analysis.BeatDetect
+import ddf.minim.ugens.Multiplier
 import ddf.minim.ugens.Sink
 import ddf.minim.ugens.Summer
 import dev.matsem.ala.model.BlendMode
@@ -10,7 +11,6 @@ import dev.matsem.ala.tools.audio.BeatListener
 import dev.matsem.ala.tools.extensions.colorModeHSB
 import dev.matsem.ala.tools.extensions.constrain
 import dev.matsem.ala.tools.extensions.draw
-import dev.matsem.ala.tools.extensions.mapp
 import dev.matsem.ala.tools.extensions.remap
 import dev.matsem.ala.tools.extensions.setPixel
 import dev.matsem.ala.tools.extensions.value
@@ -31,7 +31,7 @@ class GameOfLifeGenerator(
         .also { BeatListener(lineIn, it) }
 
     var frames = 0
-    val hue = Summer().sinked()
+    val hue = Summer().patch(Multiplier(360f)).sinked()
     val coolingFactor = Summer().sinked()
     val speed = Summer().sinked()
     val randomizeThrehold = Summer().sinked()

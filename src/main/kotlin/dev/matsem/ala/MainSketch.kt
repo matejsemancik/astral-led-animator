@@ -96,7 +96,7 @@ class MainSketch : PApplet() {
 //            knob4.patch(Multiplier(10f)).patch(it.frequency)
 //        }
         generators += GameOfLifeGenerator(this, sink, w, h, lineIn).also {
-            knob1.patch(Multiplier(360f)).patch(it.hue)
+            knob1.patch(it.hue)
             knob2.patch(it.coolingFactor)
             knob3.patch(it.speed)
             knob4.patch(it.randomizeThrehold)
