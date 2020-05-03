@@ -31,9 +31,9 @@ abstract class BaseGenerator(sketch: PApplet, private val sink: Sink, w: Int, h:
     }
 
     /**
-     * Patches [UGen] to provided [ugen] instance and returns back this [UGen].
-     * This method is different to UGen.patch(...) method, which, on other side returns [UGen]
-     * being patched (to for chaining purposes).
+     * Patches [UGen] to provided [ugen] instance and returns this [UGen].
+     * This method is different to UGen.patch(...) method, which, on other side returns the other [UGen]
+     * being patched to (for chaining purposes).
      */
     internal fun <T : UGen> T.patchedTo(ugen: UGen.UGenInput) = apply {
         patch(ugen)

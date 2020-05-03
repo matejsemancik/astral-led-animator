@@ -17,6 +17,10 @@ fun PGraphics.translateCenter() = translate(centerX(), centerY())
 
 fun PGraphics.pixelAt(x: Int, y: Int): Int = this.pixels[x + (y * width)]
 
+fun PGraphics.setPixel(x: Int, y: Int, value: Int) {
+    this.pixels[x + (y * width)] = value
+}
+
 fun PGraphics.pushPop(block: PGraphics.() -> Unit) {
     pushMatrix()
     this.block()

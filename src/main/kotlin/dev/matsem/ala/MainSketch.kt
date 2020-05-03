@@ -5,9 +5,15 @@ import ddf.minim.Minim
 import ddf.minim.ugens.Constant
 import ddf.minim.ugens.Multiplier
 import ddf.minim.ugens.Sink
-import dev.matsem.ala.generators.*
+import dev.matsem.ala.generators.BaseGenerator
+import dev.matsem.ala.generators.GameOfLifeGenerator
 import dev.matsem.ala.tools.dmx.ArtnetPatch
-import dev.matsem.ala.tools.extensions.*
+import dev.matsem.ala.tools.extensions.colorModeHSB
+import dev.matsem.ala.tools.extensions.draw
+import dev.matsem.ala.tools.extensions.midiRange
+import dev.matsem.ala.tools.extensions.pixelAt
+import dev.matsem.ala.tools.extensions.pushPop
+import dev.matsem.ala.tools.extensions.translateCenter
 import dev.matsem.ala.tools.kontrol.KontrolF1
 import processing.core.PApplet
 import processing.core.PConstants
@@ -23,7 +29,7 @@ class MainSketch : PApplet() {
         const val SPACE = 2
         const val SIZE = 10f
         const val NODE_IP = "192.168.1.18"
-        const val OUTPUT_ENABLED = true
+        const val OUTPUT_ENABLED = false
     }
 
     private var canvasWidth: Int by Delegates.vetoable(initialValue = Config.LED_WIDTH) { _, oldVal, newVal ->
@@ -69,11 +75,6 @@ class MainSketch : PApplet() {
 
     // region Core stuff
     private lateinit var canvas: PGraphics
-    private lateinit var knight1: KnightRiderGenerator
-    private lateinit var strobe1: StrobeGenerator
-    private lateinit var laser1: LaserGenerator
-    private lateinit var beatDetect1: BeatDetectGenerator
-    private lateinit var fft1: FFTGenerator
     private val generators = mutableListOf<BaseGenerator>()
     // endregion
 
@@ -81,13 +82,25 @@ class MainSketch : PApplet() {
         generators.forEach { it.unpatch() }
         generators.clear()
         canvas = createGraphics(w, h, PConstants.P2D)
-        knight1 = KnightRiderGenerator(this, sink, w, h).also { generators += it }
-        laser1 = LaserGenerator(this, sink, w, h).also { generators += it }
-        beatDetect1 = BeatDetectGenerator(this, sink, w, h, lineIn).also { generators += it }
-        fft1 = FFTGenerator(this, sink, w, h, lineIn).also { generators += it }
-        strobe1 = StrobeGenerator(this, sink, w, h).also { generators += it }
+//        generators += KnightRiderGenerator(this, sink, w, h)
+//        laser1 = LaserGenerator(this, sink, w, h).also { generators += it }
+//        beatDetect1 = BeatDetectGenerator(this, sink, w, h, lineIn).also { generators += it }
 
-        patchControls()
+//        generators += FFTGenerator(this, sink, w, h, lineIn).also {
+//            slider1.patch(Multiplier(360f)).patch(it.hue)
+//            slider2.patch(it.fading)
+//            slider3.patch(it.widthSpan)
+//            slider4.patch(it.mirroring)
+//        }
+//        generators += StrobeGenerator(this, sink, w, h).also {
+//            knob4.patch(Multiplier(10f)).patch(it.frequency)
+//        }
+        generators += GameOfLifeGenerator(this, sink, w, h, lineIn).also {
+            knob1.patch(Multiplier(360f)).patch(it.hue)
+            knob2.patch(it.coolingFactor)
+            knob3.patch(it.speed)
+            knob4.patch(it.randomizeThrehold)
+        }
     }
 
     private fun kontrolToUgens() {
@@ -99,16 +112,6 @@ class MainSketch : PApplet() {
         slider2.setConstant(kontrol.slider2.midiRange(1f))
         slider3.setConstant(kontrol.slider3.midiRange(1f))
         slider4.setConstant(kontrol.slider4.midiRange(1f))
-    }
-
-    private fun patchControls() {
-        slider1.patch(Multiplier(360f)).patch(laser1.hue)
-        slider2.patch(Multiplier(5f)).patch(laser1.frequency)
-        slider3.patch(Multiplier(2f)).patch(laser1.amplitude)
-        slider4.patch(Multiplier(canvas.width.toFloat())).patch(laser1.beamWidth)
-        knob1.patch(laser1.fading)
-        knob2.patch(Multiplier(10f)).patch(laser1.mod)
-        knob4.patch(Multiplier(10f)).patch(strobe1.frequency)
     }
 
     override fun settings() = size(1280, 720, PConstants.P3D)

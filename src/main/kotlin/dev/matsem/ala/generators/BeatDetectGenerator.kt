@@ -7,7 +7,11 @@ import ddf.minim.ugens.Summer
 import dev.matsem.ala.model.BlendMode
 import dev.matsem.ala.model.GeneratorResult
 import dev.matsem.ala.tools.audio.BeatListener
-import dev.matsem.ala.tools.extensions.*
+import dev.matsem.ala.tools.extensions.colorModeHSB
+import dev.matsem.ala.tools.extensions.draw
+import dev.matsem.ala.tools.extensions.fadeToBlackBy
+import dev.matsem.ala.tools.extensions.mapp
+import dev.matsem.ala.tools.extensions.value
 import processing.core.PApplet
 import processing.core.PConstants
 
@@ -23,8 +27,9 @@ class BeatDetectGenerator(
     val fading = Summer().sinked()
     val hue = Summer().sinked()
 
-    private val beatDetect = BeatDetect(lineIn.bufferSize(), lineIn.sampleRate()).apply { setSensitivity(10) }
-    private val beatListener = BeatListener(lineIn, beatDetect)
+    private val beatDetect = BeatDetect(lineIn.bufferSize(), lineIn.sampleRate())
+        .apply { setSensitivity(10) }
+        .also { BeatListener(lineIn, it) }
 
     override fun generate(): GeneratorResult {
         beatDetect.setSensitivity(dampening.value.mapp(10f, 300f).toInt())
