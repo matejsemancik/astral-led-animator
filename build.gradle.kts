@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.3.61"
+    kotlin("jvm") version "1.3.72"
     application
 }
 
@@ -32,6 +32,15 @@ dependencies {
     processingLibs.forEach { libName ->
         implementation(fileTree(mapOf("dir" to "$processingLibsDir/$libName/library", "include" to listOf("*.jar"))))
     }
+
+    implementation(kotlin("reflect"))
+    implementation(kotlin("script-runtime"))
+    implementation(kotlin("script-util"))
+    implementation(kotlin("compiler-embeddable"))
+    implementation(kotlin("scripting-compiler-embeddable"))
+    implementation("org.slf4j:slf4j-api:1.7.14")
+    implementation("ch.qos.logback:logback-classic:1.1.3")
+    implementation("net.java.dev.jna:jna:4.2.2")
 }
 
 tasks {

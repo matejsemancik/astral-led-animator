@@ -4,10 +4,10 @@ import processing.core.PApplet
 
 class App {
 
-    private val sketch = MainSketch()
+    private val liveSketch = LiveSketch()
 
     fun run() {
-        val args = arrayOf("MainSketch")
-        PApplet.runSketch(args, sketch)
+        val args = arrayOf("LiveSketch")
+        PApplet.runSketch(args, liveSketch)
     }
 }
