@@ -15,6 +15,6 @@ import processing.core.PGraphics
         clear()
         noStroke()
         fill(sketch.mouseX.remap(0f, sketch.width.toFloat(), 0f, 360f), 100f, 100f)
-        circle(0f, 0f, sketch.mouseY.remap(0f, sketch.height.toFloat(), 0f, height.toFloat()))
+        circle(0f, 0f, width.toFloat())
     }
 }
