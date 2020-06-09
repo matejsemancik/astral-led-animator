@@ -28,11 +28,15 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.7")
+
+    // Processing libs
     implementation(fileTree(mapOf("dir" to processingCoreDir, "include" to listOf("*.jar"))))
     processingLibs.forEach { libName ->
         implementation(fileTree(mapOf("dir" to "$processingLibsDir/$libName/library", "include" to listOf("*.jar"))))
     }
 
+    // Live coding
     implementation(kotlin("reflect"))
     implementation(kotlin("script-runtime"))
     implementation(kotlin("script-util"))
