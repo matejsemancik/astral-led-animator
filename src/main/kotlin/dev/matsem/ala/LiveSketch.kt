@@ -12,6 +12,7 @@ import java.io.File
 
 class LiveSketch : PApplet() {
 
+    private val scriptFile = File("src/main/kotlin/dev/matsem/ala/LiveScript.kts")
     private val scriptLoader = ScriptLoader()
     private var liveFunction: (PGraphics.() -> Unit)? = null
     private lateinit var canvas: PGraphics
@@ -44,7 +45,7 @@ class LiveSketch : PApplet() {
 
     private fun loadScript() {
         GlobalScope.launch(Dispatchers.Default) {
-            liveFunction = scriptLoader.loadScript(File("src/main/kotlin/dev/matsem/ala/LiveScript.kts"))
+            liveFunction = scriptLoader.loadScript(scriptFile)
         }
     }
 }
