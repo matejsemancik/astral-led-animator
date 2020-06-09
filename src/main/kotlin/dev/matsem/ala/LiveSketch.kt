@@ -1,7 +1,7 @@
 package dev.matsem.ala
 
 import dev.matsem.ala.tools.extensions.colorModeHSB
-import dev.matsem.ala.tools.script.ScriptLoader
+import dev.matsem.ala.tools.live.ScriptLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch

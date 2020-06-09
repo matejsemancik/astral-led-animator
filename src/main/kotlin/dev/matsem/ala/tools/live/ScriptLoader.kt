@@ -1,4 +1,4 @@
-package dev.matsem.ala.tools.script
+package dev.matsem.ala.tools.live
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
