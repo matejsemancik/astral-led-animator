@@ -1,28 +1,25 @@
 package dev.matsem.ala
 
 import dev.matsem.ala.tools.extensions.colorModeHSB
-import kotlinx.coroutines.CoroutineScope
+import dev.matsem.ala.tools.script.ScriptLoader
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import processing.core.PApplet
 import processing.core.PConstants
-import javax.script.ScriptEngine
-import javax.script.ScriptEngineManager
-import kotlin.coroutines.CoroutineContext
-import kotlin.time.ExperimentalTime
-import kotlin.time.measureTimedValue
+import processing.core.PGraphics
+import java.io.File
 
-class LiveSketch : PApplet(), CoroutineScope {
+class LiveSketch : PApplet() {
 
-    override val coroutineContext: CoroutineContext = Dispatchers.Default
-
-    private lateinit var engine: ScriptEngine
+    private val scriptLoader = ScriptLoader()
+    private var liveFunction: (PGraphics.() -> Unit)? = null
+    private lateinit var canvas: PGraphics
 
     override fun settings() {
-        size(600, 400, PConstants.P2D)
+        size(640, 480, PConstants.P2D)
     }
 
-    @ExperimentalTime
     override fun setup() {
         colorModeHSB()
         surface.apply {
@@ -30,17 +27,24 @@ class LiveSketch : PApplet(), CoroutineScope {
             setResizable(true)
             setAlwaysOnTop(true)
         }
-
-        engine = ScriptEngineManager().getEngineByExtension("kts")
-
-        launch {
-            engine.eval("val x = 4")
-            val res2 = engine.eval("x + 5")
-            println(res2)
-        }
+        canvas = createGraphics(200, 200, PConstants.P2D)
+        loadScript()
     }
 
     override fun draw() {
-        background(100f, 100f, 100f)
+        background(0f, 0f, 10f)
+        liveFunction?.let { func ->
+            func(canvas)
+        }
+
+        image(canvas, 0f, 0f)
+    }
+
+    override fun mouseClicked() = loadScript()
+
+    private fun loadScript() {
+        GlobalScope.launch(Dispatchers.Default) {
+            liveFunction = scriptLoader.loadScript(File("src/main/kotlin/dev/matsem/ala/LiveScript.kts"))
+        }
     }
 }
