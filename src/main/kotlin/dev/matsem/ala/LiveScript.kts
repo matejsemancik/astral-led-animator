@@ -1,6 +1,4 @@
-//@file:Suppress("UNUSED_LAMBDA_EXPRESSION")
-
-import dev.matsem.ala.generators.LiveGenerator
+import dev.matsem.ala.generators.BaseLiveGenerator
 import dev.matsem.ala.model.BlendMode
 import dev.matsem.ala.model.GeneratorResult
 import dev.matsem.ala.tools.extensions.colorModeHSB
@@ -8,19 +6,9 @@ import dev.matsem.ala.tools.extensions.draw
 import dev.matsem.ala.tools.extensions.mapSin
 import dev.matsem.ala.tools.extensions.translateCenter
 import processing.core.PApplet
-import processing.core.PConstants
-import processing.core.PGraphics
 import kotlin.math.absoluteValue
 
-object : LiveGenerator {
-
-    private lateinit var sketch: PApplet
-    private lateinit var canvas: PGraphics
-
-    override fun setup(sketch: PApplet, w: Int, h: Int) {
-        this.sketch = sketch
-        canvas = sketch.createGraphics(w, h, PConstants.P2D)
-    }
+object : BaseLiveGenerator() {
 
     override fun generate(): GeneratorResult {
         canvas.draw {

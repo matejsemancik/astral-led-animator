@@ -1,6 +1,8 @@
 package dev.matsem.ala
 
-import dev.matsem.ala.generators.LiveGenerator
+import ddf.minim.Minim
+import ddf.minim.ugens.Sink
+import dev.matsem.ala.generators.BaseLiveGenerator
 import dev.matsem.ala.tools.extensions.colorModeHSB
 import dev.matsem.ala.tools.extensions.draw
 import dev.matsem.ala.tools.live.FileWatcher
@@ -17,7 +19,14 @@ class LiveSketch : PApplet() {
 
     private val scriptFile = File("src/main/kotlin/dev/matsem/ala/LiveScript.kts")
     private val scriptLoader = ScriptLoader()
-    private var liveGenerator: LiveGenerator? = null
+    private var liveGenerator: BaseLiveGenerator? = null
+
+    // region Minim, oscillators, audio stuff
+    private val minim = Minim(this)
+    private val lineIn = minim.lineIn
+    private val lineOut = minim.lineOut
+    private val sink = Sink().apply { patch(lineOut) }
+    // endregion
 
     private val fileWatcher: FileWatcher = FileWatcher()
 
@@ -55,12 +64,10 @@ class LiveSketch : PApplet() {
         image(canvas, 0f, 0f)
     }
 
-//    override fun mouseClicked() = loadScript()
-
     private fun loadScript() {
         GlobalScope.launch(Dispatchers.Default) {
-            val gen = scriptLoader.loadScript<LiveGenerator>(scriptFile)
-            gen.setup(this@LiveSketch, 640, 480)
+            val gen = scriptLoader.loadScript<BaseLiveGenerator>(scriptFile)
+            gen.init(this@LiveSketch, sink, lineIn, width, height)
             liveGenerator = gen
         }
     }

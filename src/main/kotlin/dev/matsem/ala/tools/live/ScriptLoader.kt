@@ -18,10 +18,10 @@ class ScriptLoader {
 
         PApplet.println("[${Thread.currentThread().name}] Loading script...")
         val start = System.currentTimeMillis()
-        val loadedFunction = engine.eval(sourceCode).castOrError<T>()
+        val loadedObject = engine.eval(sourceCode).castOrError<T>()
         val end = System.currentTimeMillis()
         PApplet.println("Done. Script loaded in ${end - start} ms.")
-        return loadedFunction
+        return loadedObject
     }
 
     inline fun <reified T> Any?.castOrError() = takeIf { it is T }?.let { it as T }
