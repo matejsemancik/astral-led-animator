@@ -1,6 +1,8 @@
 package dev.matsem.ala
 
+import dev.matsem.ala.generators.LiveGenerator
 import dev.matsem.ala.tools.extensions.colorModeHSB
+import dev.matsem.ala.tools.extensions.draw
 import dev.matsem.ala.tools.live.FileWatcher
 import dev.matsem.ala.tools.live.ScriptLoader
 import kotlinx.coroutines.Dispatchers
@@ -15,7 +17,7 @@ class LiveSketch : PApplet() {
 
     private val scriptFile = File("src/main/kotlin/dev/matsem/ala/LiveScript.kts")
     private val scriptLoader = ScriptLoader()
-    private var liveFunction: (PGraphics.() -> Unit)? = null
+    private var liveGenerator: LiveGenerator? = null
 
     private val fileWatcher: FileWatcher = FileWatcher()
 
@@ -42,18 +44,24 @@ class LiveSketch : PApplet() {
 
     override fun draw() {
         background(0f, 0f, 10f)
-        liveFunction?.let { func ->
-            func(canvas)
+        canvas.draw {
+            clear()
+            liveGenerator?.let { gen ->
+                val (graphics, blendMode) = gen.generate()
+                blend(graphics, 0, 0, graphics.width, graphics.height, 0, 0, width, height, blendMode.id)
+            }
         }
 
         image(canvas, 0f, 0f)
     }
 
-    override fun mouseClicked() = loadScript()
+//    override fun mouseClicked() = loadScript()
 
     private fun loadScript() {
         GlobalScope.launch(Dispatchers.Default) {
-            liveFunction = scriptLoader.loadScript(scriptFile)
+            val gen = scriptLoader.loadScript<LiveGenerator>(scriptFile)
+            gen.setup(this@LiveSketch, 640, 480)
+            liveGenerator = gen
         }
     }
 }
