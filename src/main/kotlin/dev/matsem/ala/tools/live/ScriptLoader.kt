@@ -12,15 +12,15 @@ class ScriptLoader {
         ScriptEngineManager(Thread.currentThread().contextClassLoader).getEngineByExtension("kts")
 
     suspend inline fun <reified T> loadScript(scriptFile: File): T {
-        check(scriptFile.exists()) { "Cannot load script, the file does not exist" }
+        check(scriptFile.exists()) { "❌ Cannot load script, the file does not exist" }
         val fileName = scriptFile.name
         val sourceCode = withContext(Dispatchers.IO) { scriptFile.readText() }
 
-        println("[${Thread.currentThread().name}] Loading $fileName ...")
+        println("🟠 Compiling $fileName ...")
         val start = System.currentTimeMillis()
         val loadedObject = engine.eval(sourceCode).castOrError<T>()
         val end = System.currentTimeMillis()
-        println("$fileName loaded. Took ${end - start} ms.")
+        println("✅ $fileName loaded. Took ${end - start} ms.")
         return loadedObject
     }
 
