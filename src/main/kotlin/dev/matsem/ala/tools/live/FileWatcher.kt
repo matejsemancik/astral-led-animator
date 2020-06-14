@@ -9,6 +9,7 @@ import java.io.File
 import java.nio.file.FileSystems
 import java.nio.file.Path
 import java.nio.file.StandardWatchEventKinds
+import java.nio.file.StandardWatchEventKinds.*
 import java.nio.file.WatchEvent
 
 class FileWatcher {
@@ -34,7 +35,6 @@ class FileWatcher {
 
                     val p = (it as WatchEvent<Path>).context()
                     if (p.fileName.toString() != file.name) {
-                        println("🚧 Invalid file")
                         return@forEach
                     }
 
@@ -43,6 +43,43 @@ class FileWatcher {
 
                 if (watchKey?.reset() == false) {
                     throw CancellationException("WatchKey invalidated")
+                }
+            }
+        }
+    }
+
+    fun watchPath(
+        path: Path,
+        onCreate: (file: File) -> Unit,
+        onModify: (file: File) -> Unit,
+        onDelete: (file: File) -> Unit
+    ) {
+        GlobalScope.launch(Dispatchers.IO) {
+            path.register(
+                watcher,
+                arrayOf(ENTRY_CREATE, ENTRY_MODIFY, ENTRY_DELETE),
+                SensitivityWatchEventModifier.HIGH
+            )
+
+            while (true) {
+                val watchKey = watcher.poll()
+                watchKey?.pollEvents()?.forEach {
+                    val eventKind = it.kind()
+                    if (eventKind == OVERFLOW) {
+                        return@forEach
+                    }
+
+                    val ctx = (it as WatchEvent<Path>).context()
+                    val file = ctx.toAbsolutePath().toFile()
+                    when (eventKind) {
+                        ENTRY_CREATE -> onCreate(file)
+                        ENTRY_MODIFY -> onModify(file)
+                        ENTRY_DELETE -> onDelete(file)
+                    }
+                }
+
+                if (watchKey?.reset() == false) {
+                    throw CancellationException("WatchKey not valid anymore")
                 }
             }
         }

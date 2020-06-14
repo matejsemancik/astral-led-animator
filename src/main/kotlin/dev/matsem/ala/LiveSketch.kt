@@ -18,6 +18,7 @@ import java.io.File
 class LiveSketch : PApplet() {
 
     private val scriptFile = File("src/main/kotlin/dev/matsem/ala/LiveScript.kts")
+    private val scriptPath = File("src/main/kotlin/dev/matsem/ala").toPath()
     private val scriptLoader = ScriptLoader()
     private var liveGenerator: BaseLiveGenerator? = null
 
@@ -44,11 +45,19 @@ class LiveSketch : PApplet() {
             setAlwaysOnTop(true)
         }
         canvas = createGraphics(width, height, PConstants.P3D)
-        loadScript()
-        fileWatcher.watchFile(scriptFile) {
-            println("🛰 File change detected")
-            loadScript()
-        }
+        fileWatcher.watchPath(
+            scriptPath,
+            onCreate = {
+                println("file created: $it")
+            },
+            onModify = {
+                println("file modified: $it")
+                
+            },
+            onDelete = {
+                println("file deleted: $it")
+            }
+        )
     }
 
     override fun draw() {
