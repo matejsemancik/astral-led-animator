@@ -7,8 +7,6 @@ import java.io.File
 import javax.script.ScriptEngine
 import javax.script.ScriptEngineManager
 
-class ScriptLoadException(t: Throwable) : RuntimeException("Could not load script", t)
-
 class ScriptLoader {
 
     val engine: ScriptEngine =
