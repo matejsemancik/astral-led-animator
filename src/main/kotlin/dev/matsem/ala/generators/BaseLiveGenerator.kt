@@ -38,7 +38,7 @@ abstract class BaseLiveGenerator {
      * This also registers this [UGen] to [sinkedUGens], all of which will be unpatched from [sink] after generator
      * is destroyed to avoid possible memory leaks.
      */
-    internal fun <T : UGen> T.sinked() = apply {
+    fun <T : UGen> T.sinked() = apply {
         patch(sink)
         sinkedUGens.add(this)
     }
@@ -48,7 +48,7 @@ abstract class BaseLiveGenerator {
      * This method is different to UGen.patch(...) method, which, on other side returns the other [UGen]
      * being patched to (for chaining purposes).
      */
-    internal fun <T : UGen> T.patchedTo(ugen: UGen.UGenInput) = apply {
+    fun <T : UGen> T.patchedTo(ugen: UGen.UGenInput) = apply {
         patch(ugen)
     }
 }
