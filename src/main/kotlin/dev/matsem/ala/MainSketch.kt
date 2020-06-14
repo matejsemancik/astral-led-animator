@@ -75,7 +75,7 @@ class MainSketch : PApplet() {
     private lateinit var canvas: PGraphics
 //    private val scriptLoader = ScriptLoader()
     private val lock = Any()
-    private val liveGens = mutableMapOf<File, BaseLiveGenerator>()
+    private val generators = mutableMapOf<File, BaseLiveGenerator>()
     // endregion
 
     private fun reloadGenerators(w: Int, h: Int) {
@@ -90,10 +90,10 @@ class MainSketch : PApplet() {
         }
 
         synchronized(lock) {
-            liveGens.forEach { (_, gen) ->
+            generators.forEach { (_, gen) ->
                 gen.unpatch()
             }
-            liveGens.clear()
+            generators.clear()
         }
 
         liveScripts.forEach { file ->
@@ -101,7 +101,7 @@ class MainSketch : PApplet() {
                 val generator = ScriptLoader().loadScript<BaseLiveGenerator>(file) // TODO script loader pool
                 generator.init(this@MainSketch, sink, lineIn, w, h)
                 synchronized(lock) {
-                    liveGens[file] = generator
+                    generators[file] = generator
                 }
             }
         }
@@ -152,7 +152,7 @@ class MainSketch : PApplet() {
         colorMode(PConstants.HSB, 360f, 100f, 100f, 100f)
         draw {
             clear()
-            liveGens.filter { it.value.enabled }.forEach { (_, gen) ->
+            generators.filter { it.value.enabled }.forEach { (_, gen) ->
                 val (graphics, blendMode) = gen.generate()
                 blend(
                     graphics,
