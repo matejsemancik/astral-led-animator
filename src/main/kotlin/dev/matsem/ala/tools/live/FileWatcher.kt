@@ -70,7 +70,7 @@ class FileWatcher {
                     }
 
                     val ctx = (it as WatchEvent<Path>).context()
-                    val file = ctx.toAbsolutePath().toFile()
+                    val file = File(path.toAbsolutePath().toString() + "/" + ctx.fileName)
                     when (eventKind) {
                         ENTRY_CREATE -> onCreate(file)
                         ENTRY_MODIFY -> onModify(file)

@@ -8,6 +8,7 @@ import dev.matsem.ala.generators.BaseLiveGenerator
 import dev.matsem.ala.tools.dmx.ArtnetPatch
 import dev.matsem.ala.tools.extensions.*
 import dev.matsem.ala.tools.kontrol.KontrolF1
+import dev.matsem.ala.tools.live.FileWatcher
 import dev.matsem.ala.tools.live.ScriptLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -76,13 +77,18 @@ class MainSketch : PApplet() {
     private val lock = Any()
     private val generators = mutableMapOf<File, BaseLiveGenerator>()
     private val scriptLoaders = mutableMapOf<File, ScriptLoader>()
+    private val fileWatcher = FileWatcher()
     // endregion
 
     private fun reloadGenerators(w: Int, h: Int) {
-        println("Reloading generators @ ${w}x$h px")
         canvas = createGraphics(w, h, PConstants.P2D)
-        val scriptsDir = File(Config.GENERATORS_DIR)
-        val liveScripts = scriptsDir.listFiles { file: File -> file.name.endsWith("kts") } ?: return
+
+        println("Reloading generators @ ${w}x$h px")
+        val liveScripts = File(Config.GENERATORS_DIR)
+            .listFiles { file: File -> file.name.endsWith("kts") }
+            ?.map { it.absoluteFile }
+            ?: return
+
         if (liveScripts.isNotEmpty()) {
             println("Available files:\n ${liveScripts.joinToString(separator = "\n") { "\t${it.name}" }}")
         } else {
@@ -98,15 +104,48 @@ class MainSketch : PApplet() {
         }
 
         liveScripts.forEach { file ->
-            GlobalScope.launch(Dispatchers.Default) {
-                val scriptLoader = scriptLoaders.getOrPut(file) { ScriptLoader() }
-                val generator = scriptLoader.loadScript<BaseLiveGenerator>(file)
-                generator.init(this@MainSketch, sink, lineIn, w, h)
-                synchronized(lock) {
-                    generators[file] = generator
-                }
+            loadScript(file, w, h)
+        }
+    }
+
+    private fun loadScript(scriptFile: File, w: Int, h: Int) {
+        GlobalScope.launch(Dispatchers.Default) {
+            val scriptLoader = scriptLoaders.getOrPut(scriptFile) {
+                println("⭐️ Creating new ScriptLoader for ${scriptFile.name}")
+                ScriptLoader()
+            }
+            val loadedGen = scriptLoader.loadScript<BaseLiveGenerator>(scriptFile)
+            loadedGen.init(this@MainSketch, sink, lineIn, w, h)
+            synchronized(lock) {
+                generators[scriptFile] = loadedGen
             }
         }
+    }
+
+    private fun unloadScript(scriptFile: File) {
+        synchronized(lock) {
+            generators.remove(scriptFile)
+            scriptLoaders.remove(scriptFile)
+        }
+        println("🗑 Script ${scriptFile.name} unloaded")
+    }
+
+    private fun watchFiles() {
+        fileWatcher.watchPath(
+            File(Config.GENERATORS_DIR).toPath(),
+            onCreate = {
+                println("💥 New script available: ${it.name}")
+                loadScript(it, canvasWidth, canvasHeight)
+            },
+            onModify = {
+                println("🔵 Script change detected: ${it.name}")
+                loadScript(it, canvasWidth, canvasHeight)
+            },
+            onDelete = {
+                println("Script removed: ${it.name}")
+                unloadScript(it)
+            }
+        )
     }
 
     private fun kontrolToUgens() {
@@ -125,6 +164,7 @@ class MainSketch : PApplet() {
     override fun setup() {
         surface.setTitle("Astral LED Animator")
         surface.setResizable(true)
+        surface.setAlwaysOnTop(true)
         surface.setSize(
             (canvasWidth * Config.SIZE + canvasWidth * Config.SPACE).toInt() + 200,
             (canvasHeight * Config.SIZE + canvasHeight * Config.SPACE).toInt() + 200
@@ -135,6 +175,7 @@ class MainSketch : PApplet() {
 
         colorModeHSB()
         reloadGenerators(canvasWidth, canvasHeight)
+        watchFiles()
     }
 
     override fun draw() {

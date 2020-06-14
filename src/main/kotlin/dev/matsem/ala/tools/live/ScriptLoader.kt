@@ -20,7 +20,7 @@ class ScriptLoader {
         val start = System.currentTimeMillis()
         val loadedObject = engine.eval(sourceCode).castOrError<T>()
         val end = System.currentTimeMillis()
-        println("✅ $fileName loaded. Took ${end - start} ms.")
+        println("🚀 $fileName loaded. Took ${end - start} ms.")
         return loadedObject
     }
 
