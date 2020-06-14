@@ -4,16 +4,14 @@ import ch.bildspur.artnet.ArtNetClient
 import ddf.minim.Minim
 import ddf.minim.ugens.Constant
 import ddf.minim.ugens.Sink
-import dev.matsem.ala.generators.BaseGenerator
-import dev.matsem.ala.generators.GameOfLifeGenerator
+import dev.matsem.ala.generators.BaseLiveGenerator
 import dev.matsem.ala.tools.dmx.ArtnetPatch
-import dev.matsem.ala.tools.extensions.colorModeHSB
-import dev.matsem.ala.tools.extensions.draw
-import dev.matsem.ala.tools.extensions.midiRange
-import dev.matsem.ala.tools.extensions.pixelAt
-import dev.matsem.ala.tools.extensions.pushPop
-import dev.matsem.ala.tools.extensions.translateCenter
+import dev.matsem.ala.tools.extensions.*
 import dev.matsem.ala.tools.kontrol.KontrolF1
+import dev.matsem.ala.tools.live.ScriptLoader
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import processing.core.PApplet
 import processing.core.PConstants
 import processing.core.PGraphics
@@ -29,19 +27,20 @@ class MainSketch : PApplet() {
         const val SIZE = 10f
         const val NODE_IP = "192.168.1.18"
         const val OUTPUT_ENABLED = false
+        const val GENERATORS_DIR = "src/main/kotlin/dev/matsem/ala/generators"
     }
 
     private var canvasWidth: Int by Delegates.vetoable(initialValue = Config.LED_WIDTH) { _, oldVal, newVal ->
         val hasChanged = oldVal != newVal
         if (hasChanged) {
-            createObjects(newVal, canvasHeight)
+            reloadGenerators(newVal, canvasHeight)
         }
         hasChanged
     }
     private var canvasHeight: Int by Delegates.vetoable(initialValue = Config.LED_HEIGHT) { _, oldVal, newVal ->
         val hasChanged = oldVal != newVal
         if (hasChanged) {
-            createObjects(canvasWidth, newVal)
+            reloadGenerators(canvasWidth, newVal)
         }
         hasChanged
     }
@@ -74,31 +73,37 @@ class MainSketch : PApplet() {
 
     // region Core stuff
     private lateinit var canvas: PGraphics
-    private val generators = mutableListOf<BaseGenerator>()
+    private val scriptLoader = ScriptLoader()
+    private val lock = Any()
+    private val liveGens = mutableMapOf<File, BaseLiveGenerator>()
     // endregion
 
-    private fun createObjects(w: Int, h: Int) {
-        generators.forEach { it.unpatch() }
-        generators.clear()
+    private fun reloadGenerators(w: Int, h: Int) {
+        println("Reloading generators, resolution: [${w}x$h px]")
         canvas = createGraphics(w, h, PConstants.P2D)
-//        generators += KnightRiderGenerator(this, sink, w, h)
-//        laser1 = LaserGenerator(this, sink, w, h).also { generators += it }
-//        beatDetect1 = BeatDetectGenerator(this, sink, w, h, lineIn).also { generators += it }
+        val scriptsDir = File(Config.GENERATORS_DIR)
+        val liveScripts = scriptsDir.listFiles { file: File -> file.name.endsWith("kts") } ?: return
+        if (liveScripts.isNotEmpty()) {
+            println("Available files:\n ${liveScripts.joinToString(separator = "\n") { "\t${it.name}" }}")
+        } else {
+            println("No available files")
+        }
 
-//        generators += FFTGenerator(this, sink, w, h, lineIn).also {
-//            slider1.patch(Multiplier(360f)).patch(it.hue)
-//            slider2.patch(it.fading)
-//            slider3.patch(it.widthSpan)
-//            slider4.patch(it.mirroring)
-//        }
-//        generators += StrobeGenerator(this, sink, w, h).also {
-//            knob4.patch(Multiplier(10f)).patch(it.frequency)
-//        }
-        generators += GameOfLifeGenerator(this, sink, w, h, lineIn).also {
-            knob1.patch(it.hue)
-            knob2.patch(it.coolingFactor)
-            knob3.patch(it.speed)
-            knob4.patch(it.randomizeThrehold)
+        synchronized(lock) {
+            liveGens.forEach { (_, gen) ->
+                gen.unpatch()
+            }
+            liveGens.clear()
+        }
+
+        liveScripts.forEach { file ->
+            GlobalScope.launch(Dispatchers.Default) {
+                val generator = scriptLoader.loadScript<BaseLiveGenerator>(file)
+                generator.init(this@MainSketch, sink, lineIn, w, h)
+                synchronized(lock) {
+                    liveGens[file] = generator
+                }
+            }
         }
     }
 
@@ -124,7 +129,7 @@ class MainSketch : PApplet() {
         )
 
         colorModeHSB()
-        createObjects(canvasWidth, canvasHeight)
+        reloadGenerators(canvasWidth, canvasHeight)
         println(artnetPatch.toString())
     }
 
@@ -137,6 +142,7 @@ class MainSketch : PApplet() {
             sendData()
         }
 
+        // Debug view in upper left corner
         pushPop {
             image(canvas, 0f, 0f)
         }
@@ -146,9 +152,20 @@ class MainSketch : PApplet() {
         colorMode(PConstants.HSB, 360f, 100f, 100f, 100f)
         draw {
             clear()
-            generators.forEach {
-                val (graphics, blendMode) = it.generate()
-                blend(graphics, 0, 0, graphics.width, graphics.height, 0, 0, width, height, blendMode.id)
+            liveGens.forEach { (_, gen) ->
+                val (graphics, blendMode) = gen.generate()
+                blend(
+                    graphics,
+                    0,
+                    0,
+                    graphics.width,
+                    graphics.height,
+                    0,
+                    0,
+                    width,
+                    height,
+                    blendMode.id
+                )
             }
         }
     }
