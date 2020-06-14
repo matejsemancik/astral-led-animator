@@ -22,7 +22,7 @@ abstract class BaseGenerator(sketch: PApplet, private val sink: Sink, w: Int, h:
 
     /**
      * Patches this UGen to global [Sink] used to tick all running UGens.
-     * This also registers this [UGen] to [sinkedUGens], which will be unpatched from [sink] after generator
+     * This also registers this [UGen] to [sinkedUGens], all of which will be unpatched from [sink] after generator
      * is destroyed to avoid possible memory leaks.
      */
     internal fun <T : UGen> T.sinked() = apply {
