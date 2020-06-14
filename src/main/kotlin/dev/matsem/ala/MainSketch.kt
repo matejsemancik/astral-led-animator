@@ -152,7 +152,7 @@ class MainSketch : PApplet() {
         colorMode(PConstants.HSB, 360f, 100f, 100f, 100f)
         draw {
             clear()
-            liveGens.forEach { (_, gen) ->
+            liveGens.filter { it.value.enabled }.forEach { (_, gen) ->
                 val (graphics, blendMode) = gen.generate()
                 blend(
                     graphics,

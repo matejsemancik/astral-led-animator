@@ -10,6 +10,8 @@ import kotlin.math.absoluteValue
 
 object : BaseLiveGenerator() {
 
+    override val enabled = false
+
     override fun generate(): GeneratorResult {
         canvas.draw {
             translateCenter()
@@ -22,7 +24,7 @@ object : BaseLiveGenerator() {
                 PApplet.sin(sketch.millis() / 1000f).mapSin(0f, 1f)
             )
             fill(color)
-            circle(0f, 0f, (PApplet.sin(sketch.millis() / 500f) * 100f).absoluteValue)
+            circle(0f, 0f, (PApplet.sin(sketch.millis() / 500f) * width).absoluteValue)
         }
 
         return GeneratorResult(canvas, BlendMode.ADD)

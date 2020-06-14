@@ -16,6 +16,7 @@ abstract class BaseLiveGenerator {
     lateinit var lineIn: AudioInput
 
     open val renderer = PConstants.P2D
+    open val enabled: Boolean = true
     private val sinkedUGens = mutableListOf<UGen>()
 
     abstract fun generate(): GeneratorResult
