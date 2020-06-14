@@ -52,7 +52,6 @@ class LiveSketch : PApplet() {
             },
             onModify = {
                 println("file modified: $it")
-                
             },
             onDelete = {
                 println("file deleted: $it")
