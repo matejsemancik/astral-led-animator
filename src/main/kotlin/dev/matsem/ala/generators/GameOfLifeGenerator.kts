@@ -18,6 +18,8 @@ import kotlin.random.Random
 
 object : BaseLiveGenerator() {
 
+    override val enabled = false
+
     var frames = 0
 
     lateinit var universe: Universe

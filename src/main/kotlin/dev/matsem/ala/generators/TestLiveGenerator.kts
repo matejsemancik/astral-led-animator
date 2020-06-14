@@ -10,7 +10,7 @@ import kotlin.math.absoluteValue
 
 object : BaseLiveGenerator() {
 
-    override val enabled = false
+    override val enabled = true
 
     override fun generate(): GeneratorResult {
         canvas.draw {
