@@ -73,13 +73,13 @@ class MainSketch : PApplet() {
 
     // region Core stuff
     private lateinit var canvas: PGraphics
-//    private val scriptLoader = ScriptLoader()
     private val lock = Any()
     private val generators = mutableMapOf<File, BaseLiveGenerator>()
+    private val scriptLoaders = mutableMapOf<File, ScriptLoader>()
     // endregion
 
     private fun reloadGenerators(w: Int, h: Int) {
-        println("Reloading generators, resolution: [${w}x$h px]")
+        println("Reloading generators @ ${w}x$h px")
         canvas = createGraphics(w, h, PConstants.P2D)
         val scriptsDir = File(Config.GENERATORS_DIR)
         val liveScripts = scriptsDir.listFiles { file: File -> file.name.endsWith("kts") } ?: return
@@ -94,11 +94,13 @@ class MainSketch : PApplet() {
                 gen.unpatch()
             }
             generators.clear()
+            scriptLoaders.clear()
         }
 
         liveScripts.forEach { file ->
             GlobalScope.launch(Dispatchers.Default) {
-                val generator = ScriptLoader().loadScript<BaseLiveGenerator>(file) // TODO script loader pool
+                val scriptLoader = scriptLoaders.getOrPut(file) { ScriptLoader() }
+                val generator = scriptLoader.loadScript<BaseLiveGenerator>(file)
                 generator.init(this@MainSketch, sink, lineIn, w, h)
                 synchronized(lock) {
                     generators[file] = generator
@@ -128,9 +130,11 @@ class MainSketch : PApplet() {
             (canvasHeight * Config.SIZE + canvasHeight * Config.SPACE).toInt() + 200
         )
 
+        println("ArtNet patch:")
+        println(artnetPatch.toString())
+
         colorModeHSB()
         reloadGenerators(canvasWidth, canvasHeight)
-        println(artnetPatch.toString())
     }
 
     override fun draw() {
