@@ -73,7 +73,7 @@ class MainSketch : PApplet() {
 
     // region Core stuff
     private lateinit var canvas: PGraphics
-    private val scriptLoader = ScriptLoader()
+//    private val scriptLoader = ScriptLoader()
     private val lock = Any()
     private val liveGens = mutableMapOf<File, BaseLiveGenerator>()
     // endregion
@@ -98,7 +98,7 @@ class MainSketch : PApplet() {
 
         liveScripts.forEach { file ->
             GlobalScope.launch(Dispatchers.Default) {
-                val generator = scriptLoader.loadScript<BaseLiveGenerator>(file)
+                val generator = ScriptLoader().loadScript<BaseLiveGenerator>(file) // TODO script loader pool
                 generator.init(this@MainSketch, sink, lineIn, w, h)
                 synchronized(lock) {
                     liveGens[file] = generator

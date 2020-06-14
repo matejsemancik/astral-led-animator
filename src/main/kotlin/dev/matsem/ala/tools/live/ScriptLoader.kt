@@ -2,7 +2,6 @@ package dev.matsem.ala.tools.live
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import processing.core.PApplet
 import java.io.File
 import javax.script.ScriptEngine
 import javax.script.ScriptEngineManager
@@ -17,11 +16,11 @@ class ScriptLoader {
         val fileName = scriptFile.name
         val sourceCode = withContext(Dispatchers.IO) { scriptFile.readText() }
 
-        PApplet.println("[${Thread.currentThread().name}] Loading $fileName ...")
+        println("[${Thread.currentThread().name}] Loading $fileName ...")
         val start = System.currentTimeMillis()
         val loadedObject = engine.eval(sourceCode).castOrError<T>()
         val end = System.currentTimeMillis()
-        PApplet.println("$fileName loaded. Took ${end - start} ms.")
+        println("$fileName loaded. Took ${end - start} ms.")
         return loadedObject
     }
 
