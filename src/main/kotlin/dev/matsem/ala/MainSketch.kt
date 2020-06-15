@@ -22,12 +22,12 @@ import kotlin.properties.Delegates
 class MainSketch : PApplet() {
 
     object Config {
-        const val LED_WIDTH = 30
-        const val LED_HEIGHT = 5
+        const val LED_WIDTH = 60
+        const val LED_HEIGHT = 2
         const val SPACE = 2
         const val SIZE = 10f
         const val NODE_IP = "192.168.1.18"
-        const val OUTPUT_ENABLED = false
+        const val OUTPUT_ENABLED = true
         const val GENERATORS_DIR = "src/main/kotlin/dev/matsem/ala/generators"
     }
 
