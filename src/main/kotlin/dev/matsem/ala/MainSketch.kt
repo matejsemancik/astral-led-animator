@@ -27,7 +27,7 @@ class MainSketch : PApplet() {
         const val SPACE = 2
         const val SIZE = 10f
         const val NODE_IP = "192.168.1.18"
-        const val OUTPUT_ENABLED = false
+        const val OUTPUT_ENABLED = true
         const val GENERATORS_DIR = "src/main/kotlin/dev/matsem/ala/generators"
     }
 
@@ -69,7 +69,6 @@ class MainSketch : PApplet() {
     private lateinit var canvas: PGraphics
     private val lock = Any()
     private val generators = mutableMapOf<File, BaseLiveGenerator>()
-    private val scriptLoaders = mutableMapOf<File, ScriptLoader>()
     private val fileWatcher = FileWatcher()
     // endregion
 
@@ -93,7 +92,6 @@ class MainSketch : PApplet() {
                 gen.onUnpatch()
             }
             generators.clear()
-            scriptLoaders.clear()
         }
 
         liveScripts.forEach { file ->
@@ -103,13 +101,10 @@ class MainSketch : PApplet() {
 
     private fun loadScript(scriptFile: File, w: Int, h: Int) {
         GlobalScope.launch(Dispatchers.Default) {
-            val scriptLoader = scriptLoaders.getOrPut(scriptFile) {
-                println("⭐️ Creating new ScriptLoader for ${scriptFile.name}")
-                ScriptLoader()
-            }
-            val loadedGen = scriptLoader.loadScript<BaseLiveGenerator>(scriptFile)
+            val loadedGen = ScriptLoader().loadScript<BaseLiveGenerator>(scriptFile)
             loadedGen.init(this@MainSketch, sink, lineIn, patchBox, w, h)
             synchronized(lock) {
+                generators[scriptFile]?.onUnpatch()
                 generators[scriptFile] = loadedGen
             }
         }
@@ -117,8 +112,8 @@ class MainSketch : PApplet() {
 
     private fun unloadScript(scriptFile: File) {
         synchronized(lock) {
+            generators[scriptFile]?.onUnpatch()
             generators.remove(scriptFile)
-            scriptLoaders.remove(scriptFile)
         }
         println("🗑 Script ${scriptFile.name} unloaded")
     }
