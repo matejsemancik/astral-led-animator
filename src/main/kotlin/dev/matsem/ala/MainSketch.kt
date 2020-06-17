@@ -2,13 +2,13 @@ package dev.matsem.ala
 
 import ch.bildspur.artnet.ArtNetClient
 import ddf.minim.Minim
-import ddf.minim.ugens.Constant
 import ddf.minim.ugens.Sink
 import dev.matsem.ala.generators.BaseLiveGenerator
 import dev.matsem.ala.tools.dmx.ArtnetPatch
 import dev.matsem.ala.tools.extensions.*
 import dev.matsem.ala.tools.kontrol.KontrolF1
 import dev.matsem.ala.tools.live.FileWatcher
+import dev.matsem.ala.tools.live.PatchBox
 import dev.matsem.ala.tools.live.ScriptLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -27,7 +27,7 @@ class MainSketch : PApplet() {
         const val SPACE = 2
         const val SIZE = 10f
         const val NODE_IP = "192.168.1.18"
-        const val OUTPUT_ENABLED = true
+        const val OUTPUT_ENABLED = false
         const val GENERATORS_DIR = "src/main/kotlin/dev/matsem/ala/generators"
     }
 
@@ -48,14 +48,6 @@ class MainSketch : PApplet() {
 
     // region Kontrol F1 MIDI controller stuff
     private val kontrol = KontrolF1().apply { connect() }
-    private var knob1 = Constant(0f)
-    private var knob2 = Constant(0f)
-    private var knob3 = Constant(0f)
-    private var knob4 = Constant(0f)
-    private var slider1 = Constant(0f)
-    private var slider2 = Constant(0f)
-    private var slider3 = Constant(0f)
-    private var slider4 = Constant(0f)
     // endregion
 
     // region Minim, oscillators, audio stuff
@@ -63,6 +55,7 @@ class MainSketch : PApplet() {
     private val lineIn = minim.lineIn
     private val lineOut = minim.lineOut
     private val sink = Sink().apply { patch(lineOut) }
+    private val patchBox = PatchBox()
     // endregion
 
     // region Art-Net stuff
@@ -97,7 +90,7 @@ class MainSketch : PApplet() {
 
         synchronized(lock) {
             generators.forEach { (_, gen) ->
-                gen.unpatch()
+                gen.onUnpatch()
             }
             generators.clear()
             scriptLoaders.clear()
@@ -115,7 +108,7 @@ class MainSketch : PApplet() {
                 ScriptLoader()
             }
             val loadedGen = scriptLoader.loadScript<BaseLiveGenerator>(scriptFile)
-            loadedGen.init(this@MainSketch, sink, lineIn, w, h)
+            loadedGen.init(this@MainSketch, sink, lineIn, patchBox, w, h)
             synchronized(lock) {
                 generators[scriptFile] = loadedGen
             }
@@ -148,15 +141,15 @@ class MainSketch : PApplet() {
         )
     }
 
-    private fun kontrolToUgens() {
-        knob1.setConstant(kontrol.knob1.midiRange(1f))
-        knob2.setConstant(kontrol.knob2.midiRange(1f))
-        knob3.setConstant(kontrol.knob3.midiRange(1f))
-        knob4.setConstant(kontrol.knob4.midiRange(1f))
-        slider1.setConstant(kontrol.slider1.midiRange(1f))
-        slider2.setConstant(kontrol.slider2.midiRange(1f))
-        slider3.setConstant(kontrol.slider3.midiRange(1f))
-        slider4.setConstant(kontrol.slider4.midiRange(1f))
+    private fun updatePatchBox() {
+        patchBox.knob1.setConstant(kontrol.knob1.midiRange(1f))
+        patchBox.knob2.setConstant(kontrol.knob2.midiRange(1f))
+        patchBox.knob3.setConstant(kontrol.knob3.midiRange(1f))
+        patchBox.knob4.setConstant(kontrol.knob4.midiRange(1f))
+        patchBox.slider1.setConstant(kontrol.slider1.midiRange(1f))
+        patchBox.slider2.setConstant(kontrol.slider2.midiRange(1f))
+        patchBox.slider3.setConstant(kontrol.slider3.midiRange(1f))
+        patchBox.slider4.setConstant(kontrol.slider4.midiRange(1f))
     }
 
     override fun settings() = size(1280, 720, PConstants.P3D)
@@ -179,7 +172,7 @@ class MainSketch : PApplet() {
     }
 
     override fun draw() {
-        kontrolToUgens()
+        updatePatchBox()
         background(0f, 0f, 10f)
         renderCanvas()
         drawOutput()

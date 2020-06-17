@@ -1,11 +1,8 @@
 package dev.matsem.ala.generators
 
-import ddf.minim.AudioInput
 import ddf.minim.UGen
 import ddf.minim.analysis.BeatDetect
 import ddf.minim.ugens.Multiplier
-import ddf.minim.ugens.Sink
-import ddf.minim.ugens.Summer
 import dev.matsem.ala.model.BlendMode
 import dev.matsem.ala.model.GeneratorResult
 import dev.matsem.ala.tools.audio.BeatListener
@@ -13,7 +10,6 @@ import dev.matsem.ala.tools.extensions.*
 import dev.matsem.ala.tools.gameoflife.AliveCell
 import dev.matsem.ala.tools.gameoflife.DeadCell
 import dev.matsem.ala.tools.gameoflife.Universe
-import processing.core.PApplet
 import kotlin.random.Random
 
 object : BaseLiveGenerator() {
@@ -31,21 +27,24 @@ object : BaseLiveGenerator() {
     lateinit var speed: UGen
     lateinit var randomizeThreshold: UGen
 
-    override fun init(sketch: PApplet, sink: Sink, lineIn: AudioInput, w: Int, h: Int) {
-        super.init(sketch, sink, lineIn, w, h)
-
-        universe = Universe(Array(h) { Array(w) { if (Random.nextFloat() > 0.5f) AliveCell else DeadCell } })
+    override fun onPatch() {
+        super.onPatch()
+        universe = Universe(Array(canvas.width) {
+            Array(canvas.height) {
+                if (Random.nextFloat() > 0.5f) AliveCell else DeadCell
+            }
+        })
         beatDetect = BeatDetect(lineIn.bufferSize(), lineIn.sampleRate()).apply { setSensitivity(300) }
         beatListener = BeatListener(lineIn, beatDetect)
 
-        hue = Summer().patch(Multiplier(360f)).sinked()
-        coolingFactor = Summer().sinked()
-        speed = Summer().sinked()
-        randomizeThreshold = Summer().sinked()
+        hue = patchBox.knob1.patch(Multiplier(360f)).sinked()
+        coolingFactor = patchBox.knob2.sinked()
+        speed = patchBox.knob3.sinked()
+        randomizeThreshold = patchBox.knob4.sinked()
     }
 
-    override fun unpatch() {
-        super.unpatch()
+    override fun onUnpatch() {
+        super.onUnpatch()
         beatListener.unpatch()
     }
 

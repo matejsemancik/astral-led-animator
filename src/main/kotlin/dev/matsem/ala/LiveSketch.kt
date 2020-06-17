@@ -6,6 +6,7 @@ import dev.matsem.ala.generators.BaseLiveGenerator
 import dev.matsem.ala.tools.extensions.colorModeHSB
 import dev.matsem.ala.tools.extensions.draw
 import dev.matsem.ala.tools.live.FileWatcher
+import dev.matsem.ala.tools.live.PatchBox
 import dev.matsem.ala.tools.live.ScriptLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -75,7 +76,7 @@ class LiveSketch : PApplet() {
     private fun loadScript() {
         GlobalScope.launch(Dispatchers.Default) {
             val gen = scriptLoader.loadScript<BaseLiveGenerator>(scriptFile)
-            gen.init(this@LiveSketch, sink, lineIn, width, height)
+            gen.init(this@LiveSketch, sink, lineIn, PatchBox(), width, height)
             liveGenerator = gen
         }
     }
