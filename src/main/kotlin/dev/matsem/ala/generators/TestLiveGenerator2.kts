@@ -7,17 +7,19 @@ import dev.matsem.ala.tools.extensions.*
 
 object : BaseLiveGenerator() {
 
-    override val enabled = true
+    override val enabled = false
 
     lateinit var hue: UGen
     lateinit var contrast: UGen
     lateinit var brightness: UGen
+    lateinit var speed: UGen
 
     override fun onPatch() {
         super.onPatch()
         hue = patchBox.knob1.patch(Multiplier(360f)).sinked()
         contrast = patchBox.knob2.patch(Multiplier(5f)).sinked()
         brightness = patchBox.knob3.sinked()
+        speed = patchBox.knob4.sinked()
     }
 
     override fun generate(): GeneratorResult {
@@ -31,7 +33,7 @@ object : BaseLiveGenerator() {
                     val color = color(
                         hue.value,
                         100f,
-                        sketch.noise(x.toFloat() / 100f + sketch.millis() / 3000f, y.toFloat()) * 100f
+                        sketch.noise(x.toFloat() / 100f + sketch.millis() / (3000f * speed.value), y.toFloat()) * 100f
                     ).contrast(contrast.value, brightness.value.mapp(-128f, 128f))
 
                     canvas.setPixel(x, y, color)

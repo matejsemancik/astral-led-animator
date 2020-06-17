@@ -17,7 +17,7 @@ object : BaseLiveGenerator() {
             noStroke()
             val color = lerpColor(
                 color(0f, 100f, 80f),
-                color(20f, 100f, 80f),
+                color(100f, 100f, 80f),
                 sin(sketch.millis() / 1000f).mapSin(0f, 1f)
             )
             fill(color)

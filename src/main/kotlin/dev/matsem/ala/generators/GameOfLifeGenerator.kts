@@ -14,7 +14,7 @@ import kotlin.random.Random
 
 object : BaseLiveGenerator() {
 
-    override val enabled = false
+    override val enabled = true
 
     var frames = 0
 
@@ -29,12 +29,12 @@ object : BaseLiveGenerator() {
 
     override fun onPatch() {
         super.onPatch()
-        universe = Universe(Array(canvas.width) {
-            Array(canvas.height) {
+        universe = Universe(Array(canvas.height) {
+            Array(canvas.width) {
                 if (Random.nextFloat() > 0.5f) AliveCell else DeadCell
             }
         })
-        beatDetect = BeatDetect(lineIn.bufferSize(), lineIn.sampleRate()).apply { setSensitivity(300) }
+        beatDetect = BeatDetect(lineIn.bufferSize(), lineIn.sampleRate()).apply { setSensitivity(100) }
         beatListener = BeatListener(lineIn, beatDetect)
 
         hue = patchBox.knob1.patch(Multiplier(360f)).sinked()
