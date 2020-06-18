@@ -14,7 +14,7 @@ import kotlin.random.Random
 
 object : BaseLiveGenerator() {
 
-    override val enabled = false
+    override val enabled = true
 
     var frames = 0
 

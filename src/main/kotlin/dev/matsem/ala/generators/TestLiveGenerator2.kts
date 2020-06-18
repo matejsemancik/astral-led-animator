@@ -10,7 +10,7 @@ import dev.matsem.ala.tools.extensions.*
 
 object : BaseLiveGenerator() {
 
-    override val enabled = false
+    override val enabled = true
 
     lateinit var hue: UGen
     lateinit var contrast: UGen
@@ -45,6 +45,6 @@ object : BaseLiveGenerator() {
             updatePixels()
         }
 
-        return GeneratorResult(canvas, BlendMode.BLEND)
+        return GeneratorResult(canvas, BlendMode.ADD)
     }
 }

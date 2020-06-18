@@ -4,6 +4,7 @@ import ch.bildspur.artnet.ArtNetClient
 import ddf.minim.Minim
 import ddf.minim.ugens.Sink
 import dev.matsem.ala.generators.BaseLiveGenerator
+import dev.matsem.ala.model.GeneratorResult
 import dev.matsem.ala.tools.dmx.ArtnetPatch
 import dev.matsem.ala.tools.extensions.*
 import dev.matsem.ala.tools.kontrol.KontrolF1
@@ -55,7 +56,7 @@ class MainSketch : PApplet() {
     // endregion
 
     // region Core stuff
-    private lateinit var canvas: PGraphics
+    private lateinit var mainCanvas: PGraphics
     private val lock = Any()
     private val generators = mutableMapOf<File, BaseLiveGenerator>()
     private val fileWatcher = FileWatcher()
@@ -83,47 +84,51 @@ class MainSketch : PApplet() {
     override fun draw() {
         updatePatchBox()
         background(0f, 0f, 10f)
-        runGenerators()
-        drawPreview()
+
+        val layers = generateLayers()
+        renderMainCanvas(layers)
+        drawLayerPreviews(layers)
+
+        drawMainPreview()
+
         if (Config.OUTPUT_ENABLED) {
             sendData()
         }
+    }
 
-        // Debug view in upper left corner
-        pushPop {
-            image(canvas, 0f, 0f)
+    private fun generateLayers() = generators
+        .filter { it.value.enabled }
+        .map {
+            val gen = it.value
+            try {
+                gen.generate()
+            } catch (t: Throwable) {
+                t.printStackTrace()
+                null
+            }
+        }.filterNotNull()
+
+    private fun renderMainCanvas(layers: List<GeneratorResult>) = mainCanvas.draw {
+        clear()
+        colorModeHSB()
+        layers.forEach {
+            blend(it.graphics, 0, 0, it.graphics.width, it.graphics.height, 0, 0, width, height, it.blendMode.id)
         }
     }
 
-    private fun runGenerators() = canvas.apply {
-        colorMode(PConstants.HSB, 360f, 100f, 100f, 100f)
-        draw {
-            clear()
-            generators.filter { it.value.enabled }.forEach { (_, gen) ->
-                val (graphics, blendMode) = try {
-                    gen.generate()
-                } catch (t: Throwable) {
-                    t.printStackTrace()
-                    return@forEach
+    private fun drawLayerPreviews(layers: List<GeneratorResult>) {
+        pushPop {
+            scale(2f)
+            layers.forEachIndexed { i, layer ->
+                pushPop {
+                    translate(16f, 16f + (i * 8f))
+                    image(layer.graphics, 0f, 0f)
                 }
-
-                blend(
-                    graphics,
-                    0,
-                    0,
-                    graphics.width,
-                    graphics.height,
-                    0,
-                    0,
-                    width,
-                    height,
-                    blendMode.id
-                )
             }
         }
     }
 
-    private fun drawPreview() {
+    private fun drawMainPreview() {
         pushPop {
             val cellSize = Config.SIZE
             val space = Config.SPACE
@@ -133,11 +138,11 @@ class MainSketch : PApplet() {
             translateCenter()
             rectMode(PConstants.CORNER)
             noStroke()
-            canvas.loadPixels()
+            mainCanvas.loadPixels()
 
             for (x in 0 until canvasWidth) {
                 for (y in 0 until canvasHeight) {
-                    fill(canvas.pixelAt(x, y))
+                    fill(mainCanvas.pixelAt(x, y))
                     square(
                         (x.toFloat() * cellSize + space * x) - drawnWidth / 2f,
                         (y.toFloat() * cellSize + space * y) - drawnHeight / 2f,
@@ -149,14 +154,14 @@ class MainSketch : PApplet() {
     }
 
     private fun sendData() = with(artnetPatch) {
-        scan(canvas)
+        scan(mainCanvas)
         universeData.forEach { (universe, byteArray) ->
             artnetClient.unicastDmx(Config.NODE_IP, 0, universe, byteArray)
         }
     }
 
     private fun loadGenerators(w: Int, h: Int) {
-        canvas = createGraphics(w, h, PConstants.P2D)
+        mainCanvas = createGraphics(w, h, PConstants.P2D)
 
         println("Loading generators @ ${w}x$h px")
         val liveScripts = File(Config.GENERATORS_DIR)
