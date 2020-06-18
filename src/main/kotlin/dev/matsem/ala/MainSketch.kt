@@ -104,7 +104,11 @@ class MainSketch : PApplet() {
             val loadedGen = ScriptLoader().loadScript<BaseLiveGenerator>(scriptFile)
             loadedGen.init(this@MainSketch, sink, lineIn, patchBox, w, h)
             synchronized(lock) {
-                generators[scriptFile]?.onUnpatch()
+                try {
+                    generators[scriptFile]?.onUnpatch()
+                } catch (t: Throwable) {
+                    t.printStackTrace()
+                }
                 generators[scriptFile] = loadedGen
             }
         }
@@ -186,7 +190,13 @@ class MainSketch : PApplet() {
         draw {
             clear()
             generators.filter { it.value.enabled }.forEach { (_, gen) ->
-                val (graphics, blendMode) = gen.generate()
+                val (graphics, blendMode) = try {
+                    gen.generate()
+                } catch (t: Throwable) {
+                    t.printStackTrace()
+                    return@forEach
+                }
+
                 blend(
                     graphics,
                     0,
