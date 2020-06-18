@@ -17,7 +17,6 @@ import processing.core.PApplet
 import processing.core.PConstants
 import processing.core.PGraphics
 import java.io.File
-import kotlin.properties.Delegates
 
 class MainSketch : PApplet() {
 
@@ -31,20 +30,8 @@ class MainSketch : PApplet() {
         const val GENERATORS_DIR = "src/main/kotlin/dev/matsem/ala/generators"
     }
 
-    private var canvasWidth: Int by Delegates.vetoable(initialValue = Config.LED_WIDTH) { _, oldVal, newVal ->
-        val hasChanged = oldVal != newVal
-        if (hasChanged) {
-            reloadGenerators(newVal, canvasHeight)
-        }
-        hasChanged
-    }
-    private var canvasHeight: Int by Delegates.vetoable(initialValue = Config.LED_HEIGHT) { _, oldVal, newVal ->
-        val hasChanged = oldVal != newVal
-        if (hasChanged) {
-            reloadGenerators(canvasWidth, newVal)
-        }
-        hasChanged
-    }
+    private var canvasWidth = Config.LED_WIDTH
+    private var canvasHeight = Config.LED_HEIGHT
 
     // region Kontrol F1 MIDI controller stuff
     private val kontrol = KontrolF1().apply { connect() }
@@ -61,10 +48,9 @@ class MainSketch : PApplet() {
     // region Art-Net stuff
     private val artnetClient = ArtNetClient().apply { start() }
     private val artnetPatch = ArtnetPatch(Config.LED_WIDTH, Config.LED_HEIGHT).apply {
-        for(y in 0 until patchHeight) {
+        for (y in 0 until patchHeight) {
             patch(0 until patchWidth, y until y + 1, ArtnetPatch.Direction.SNAKE_NE, y, 0)
         }
-//        patch(0 until patchWidth, 0 until patchHeight, ArtnetPatch.Direction.SNAKE_NE, 0, 0)
     }
     // endregion
 
@@ -74,85 +60,6 @@ class MainSketch : PApplet() {
     private val generators = mutableMapOf<File, BaseLiveGenerator>()
     private val fileWatcher = FileWatcher()
     // endregion
-
-    private fun reloadGenerators(w: Int, h: Int) {
-        canvas = createGraphics(w, h, PConstants.P2D)
-
-        println("Reloading generators @ ${w}x$h px")
-        val liveScripts = File(Config.GENERATORS_DIR)
-            .listFiles { file: File -> file.name.endsWith("kts") }
-            ?.map { it.absoluteFile }
-            ?: return
-
-        if (liveScripts.isNotEmpty()) {
-            println("Available files:\n ${liveScripts.joinToString(separator = "\n") { "\t${it.name}" }}")
-        } else {
-            println("No available files")
-        }
-
-        synchronized(lock) {
-            generators.forEach { (_, gen) ->
-                gen.onUnpatch()
-            }
-            generators.clear()
-        }
-
-        liveScripts.forEach { file ->
-            loadScript(file, w, h)
-        }
-    }
-
-    private fun loadScript(scriptFile: File, w: Int, h: Int) {
-        GlobalScope.launch(Dispatchers.Default) {
-            val loadedGen = ScriptLoader().loadScript<BaseLiveGenerator>(scriptFile)
-            loadedGen.init(this@MainSketch, sink, lineIn, patchBox, w, h)
-            synchronized(lock) {
-                try {
-                    generators[scriptFile]?.onUnpatch()
-                } catch (t: Throwable) {
-                    t.printStackTrace()
-                }
-                generators[scriptFile] = loadedGen
-            }
-        }
-    }
-
-    private fun unloadScript(scriptFile: File) {
-        synchronized(lock) {
-            generators[scriptFile]?.onUnpatch()
-            generators.remove(scriptFile)
-        }
-        println("🗑 Script ${scriptFile.name} unloaded")
-    }
-
-    private fun watchFiles() {
-        fileWatcher.watchPath(
-            File(Config.GENERATORS_DIR).toPath(),
-            onCreate = {
-                println("💥 New script available: ${it.name}")
-                loadScript(it, canvasWidth, canvasHeight)
-            },
-            onModify = {
-                println("🔵 Script change detected: ${it.name}")
-                loadScript(it, canvasWidth, canvasHeight)
-            },
-            onDelete = {
-                println("Script removed: ${it.name}")
-                unloadScript(it)
-            }
-        )
-    }
-
-    private fun updatePatchBox() {
-        patchBox.knob1.setConstant(kontrol.knob1.midiRange(1f))
-        patchBox.knob2.setConstant(kontrol.knob2.midiRange(1f))
-        patchBox.knob3.setConstant(kontrol.knob3.midiRange(1f))
-        patchBox.knob4.setConstant(kontrol.knob4.midiRange(1f))
-        patchBox.slider1.setConstant(kontrol.slider1.midiRange(1f))
-        patchBox.slider2.setConstant(kontrol.slider2.midiRange(1f))
-        patchBox.slider3.setConstant(kontrol.slider3.midiRange(1f))
-        patchBox.slider4.setConstant(kontrol.slider4.midiRange(1f))
-    }
 
     override fun settings() = size(1280, 720, PConstants.P3D)
 
@@ -169,15 +76,15 @@ class MainSketch : PApplet() {
         println(artnetPatch.toString())
 
         colorModeHSB()
-        reloadGenerators(canvasWidth, canvasHeight)
+        loadGenerators(canvasWidth, canvasHeight)
         watchFiles()
     }
 
     override fun draw() {
         updatePatchBox()
         background(0f, 0f, 10f)
-        renderCanvas()
-        drawOutput()
+        runGenerators()
+        drawPreview()
         if (Config.OUTPUT_ENABLED) {
             sendData()
         }
@@ -188,7 +95,7 @@ class MainSketch : PApplet() {
         }
     }
 
-    private fun renderCanvas() = canvas.apply {
+    private fun runGenerators() = canvas.apply {
         colorMode(PConstants.HSB, 360f, 100f, 100f, 100f)
         draw {
             clear()
@@ -216,7 +123,7 @@ class MainSketch : PApplet() {
         }
     }
 
-    private fun drawOutput() {
+    private fun drawPreview() {
         pushPop {
             val cellSize = Config.SIZE
             val space = Config.SPACE
@@ -246,6 +153,85 @@ class MainSketch : PApplet() {
         universeData.forEach { (universe, byteArray) ->
             artnetClient.unicastDmx(Config.NODE_IP, 0, universe, byteArray)
         }
+    }
+
+    private fun loadGenerators(w: Int, h: Int) {
+        canvas = createGraphics(w, h, PConstants.P2D)
+
+        println("Loading generators @ ${w}x$h px")
+        val liveScripts = File(Config.GENERATORS_DIR)
+            .listFiles { file: File -> file.name.endsWith("kts") }
+            ?.map { it.absoluteFile }
+            ?: return
+
+        if (liveScripts.isNotEmpty()) {
+            println("Available files:\n ${liveScripts.joinToString(separator = "\n") { "\t${it.name}" }}")
+        } else {
+            println("No available files")
+        }
+
+        synchronized(lock) {
+            generators.forEach { (_, gen) ->
+                gen.onUnpatch()
+            }
+            generators.clear()
+        }
+
+        liveScripts.forEach { file ->
+            loadScript(file, w, h)
+        }
+    }
+
+    private fun watchFiles() {
+        fileWatcher.watchPath(
+            File(Config.GENERATORS_DIR).toPath(),
+            onCreate = {
+                println("💥 New script available: ${it.name}")
+                loadScript(it, canvasWidth, canvasHeight)
+            },
+            onModify = {
+                println("🔵 Script change detected: ${it.name}")
+                loadScript(it, canvasWidth, canvasHeight)
+            },
+            onDelete = {
+                println("Script removed: ${it.name}")
+                unloadScript(it)
+            }
+        )
+    }
+
+    private fun loadScript(scriptFile: File, w: Int, h: Int) {
+        GlobalScope.launch(Dispatchers.Default) {
+            val loadedGen = ScriptLoader().loadScript<BaseLiveGenerator>(scriptFile)
+            loadedGen.init(this@MainSketch, sink, lineIn, patchBox, w, h)
+            synchronized(lock) {
+                try {
+                    generators[scriptFile]?.onUnpatch()
+                } catch (t: Throwable) {
+                    t.printStackTrace()
+                }
+                generators[scriptFile] = loadedGen
+            }
+        }
+    }
+
+    private fun unloadScript(scriptFile: File) {
+        synchronized(lock) {
+            generators[scriptFile]?.onUnpatch()
+            generators.remove(scriptFile)
+        }
+        println("🗑 Script ${scriptFile.name} unloaded")
+    }
+
+    private fun updatePatchBox() {
+        patchBox.knob1.setConstant(kontrol.knob1.midiRange(1f))
+        patchBox.knob2.setConstant(kontrol.knob2.midiRange(1f))
+        patchBox.knob3.setConstant(kontrol.knob3.midiRange(1f))
+        patchBox.knob4.setConstant(kontrol.knob4.midiRange(1f))
+        patchBox.slider1.setConstant(kontrol.slider1.midiRange(1f))
+        patchBox.slider2.setConstant(kontrol.slider2.midiRange(1f))
+        patchBox.slider3.setConstant(kontrol.slider3.midiRange(1f))
+        patchBox.slider4.setConstant(kontrol.slider4.midiRange(1f))
     }
 
     /**
