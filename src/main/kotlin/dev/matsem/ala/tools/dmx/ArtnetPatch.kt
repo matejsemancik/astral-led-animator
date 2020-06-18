@@ -6,11 +6,17 @@ import dev.matsem.ala.tools.extensions.rgbGreen
 import dev.matsem.ala.tools.extensions.rgbRed
 import processing.core.PGraphics
 
+/**
+ * Represents a single pixel on a fixture.
+ */
 inline class PixelChannels(val value: Triple<Int, Int, Int>) {
     override fun toString() =
         value.toList().joinToString(separator = ",") { it.toString().padStart(3, '0') }.let { "[$it]" }
 }
 
+/**
+ * Maps pixel on a canvas to ArtNet universe.
+ */
 inline class UniverseToPixelChannels(val value: Pair<Int, PixelChannels>) {
     override fun toString() = "${value.first}: ${value.second}"
 }
@@ -36,6 +42,7 @@ class ArtnetPatch(val patchWidth: Int, val patchHeight: Int) {
      * at [startChannel].
      */
     fun patch(rangeX: IntRange, rangeY: IntRange, direction: Direction, universe: Int, startChannel: Int) {
+        check(rangeX.count() * rangeY.count() * 3 <= 512) { "Patch is out of range" }
         var chan = startChannel
         when (direction) {
             Direction.SNAKE_NE -> {
