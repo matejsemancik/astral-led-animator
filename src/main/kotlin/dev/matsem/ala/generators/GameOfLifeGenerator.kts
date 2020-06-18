@@ -14,7 +14,7 @@ import kotlin.random.Random
 
 object : BaseLiveGenerator() {
 
-    override val enabled = true
+    override val enabled = false
 
     var frames = 0
 
@@ -38,7 +38,7 @@ object : BaseLiveGenerator() {
         beatListener = BeatListener(lineIn, beatDetect)
 
         hue = patchBox.knob1.patch(Multiplier(360f)).sinked()
-        coolingFactor = patchBox.knob2.sinked()
+        coolingFactor = patchBox.slider4.sinked()
         speed = patchBox.knob3.sinked()
         randomizeThreshold = patchBox.knob4.sinked()
     }

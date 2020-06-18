@@ -1,38 +1,44 @@
 package dev.matsem.ala.generators
 
-import ddf.minim.AudioInput
+import ddf.minim.UGen
 import ddf.minim.analysis.BeatDetect
-import ddf.minim.ugens.Sink
-import ddf.minim.ugens.Summer
+import ddf.minim.ugens.Multiplier
 import dev.matsem.ala.model.BlendMode
 import dev.matsem.ala.model.GeneratorResult
 import dev.matsem.ala.tools.audio.BeatListener
 import dev.matsem.ala.tools.extensions.colorModeHSB
 import dev.matsem.ala.tools.extensions.draw
 import dev.matsem.ala.tools.extensions.fadeToBlackBy
-import dev.matsem.ala.tools.extensions.mapp
 import dev.matsem.ala.tools.extensions.value
-import processing.core.PApplet
 import processing.core.PConstants
 
-class BeatDetectGenerator(
-    sketch: PApplet,
-    sink: Sink,
-    w: Int,
-    h: Int,
-    lineIn: AudioInput
-) : BaseGenerator(sketch, sink, w, h) {
+object : BaseLiveGenerator() {
 
-    val dampening = Summer().sinked()
-    val fading = Summer().sinked()
-    val hue = Summer().sinked()
+    override val enabled = true
 
-    private val beatDetect = BeatDetect(lineIn.bufferSize(), lineIn.sampleRate())
-        .apply { setSensitivity(10) }
-        .also { BeatListener(lineIn, it) }
+    lateinit var fading: UGen
+    lateinit var hue: UGen
+
+    lateinit var beatDetect: BeatDetect
+    lateinit var beatListener: BeatListener
+
+    override fun onPatch() {
+        super.onPatch()
+
+        hue = patchBox.knob1.patch(Multiplier(360f)).sinked()
+        fading = patchBox.knob2.sinked()
+
+
+        beatDetect = BeatDetect(lineIn.bufferSize(), lineIn.sampleRate()).apply { setSensitivity(300) }
+        beatListener = BeatListener(lineIn, beatDetect)
+    }
+
+    override fun onUnpatch() {
+        super.onUnpatch()
+        beatListener.unpatch()
+    }
 
     override fun generate(): GeneratorResult {
-        beatDetect.setSensitivity(dampening.value.mapp(10f, 300f).toInt())
         canvas.noSmooth()
         canvas.draw {
             colorModeHSB()

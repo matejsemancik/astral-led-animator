@@ -1,5 +1,8 @@
+
 import ddf.minim.UGen
 import ddf.minim.ugens.Multiplier
+import ddf.minim.ugens.Oscil
+import ddf.minim.ugens.Waves
 import dev.matsem.ala.generators.BaseLiveGenerator
 import dev.matsem.ala.model.BlendMode
 import dev.matsem.ala.model.GeneratorResult
@@ -16,10 +19,10 @@ object : BaseLiveGenerator() {
 
     override fun onPatch() {
         super.onPatch()
-        hue = patchBox.knob1.patch(Multiplier(360f)).sinked()
-        contrast = patchBox.knob2.patch(Multiplier(5f)).sinked()
-        brightness = patchBox.knob3.sinked()
-        speed = patchBox.knob4.sinked()
+        hue = Oscil(0.01f, 1f, Waves.SAW).patch(Multiplier(360f)).sinked()
+        contrast = patchBox.slider2.patch(Multiplier(5f)).sinked()
+        brightness = patchBox.slider3.sinked()
+        speed = patchBox.slider4.sinked()
     }
 
     override fun generate(): GeneratorResult {
