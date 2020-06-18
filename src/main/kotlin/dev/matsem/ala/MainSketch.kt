@@ -22,12 +22,12 @@ import kotlin.properties.Delegates
 class MainSketch : PApplet() {
 
     object Config {
-        const val LED_WIDTH = 60
-        const val LED_HEIGHT = 2
+        const val LED_WIDTH = 150
+        const val LED_HEIGHT = 5
         const val SPACE = 2
-        const val SIZE = 10f
+        const val SIZE = 5f
         const val NODE_IP = "192.168.1.18"
-        const val OUTPUT_ENABLED = true
+        const val OUTPUT_ENABLED = false
         const val GENERATORS_DIR = "src/main/kotlin/dev/matsem/ala/generators"
     }
 
@@ -61,7 +61,10 @@ class MainSketch : PApplet() {
     // region Art-Net stuff
     private val artnetClient = ArtNetClient().apply { start() }
     private val artnetPatch = ArtnetPatch(Config.LED_WIDTH, Config.LED_HEIGHT).apply {
-        patch(0 until patchWidth, 0 until patchHeight, ArtnetPatch.Direction.SNAKE_NE, 0, 0)
+        for(y in 0 until patchHeight) {
+            patch(0 until patchWidth, y until y + 1, ArtnetPatch.Direction.SNAKE_NE, y, 0)
+        }
+//        patch(0 until patchWidth, 0 until patchHeight, ArtnetPatch.Direction.SNAKE_NE, 0, 0)
     }
     // endregion
 
