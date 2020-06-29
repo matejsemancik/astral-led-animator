@@ -67,7 +67,7 @@ class MainSketch : PApplet() {
     override fun setup() {
         surface.setTitle("Astral LED Animator")
         surface.setResizable(true)
-        surface.setAlwaysOnTop(true)
+        surface.setAlwaysOnTop(false)
         surface.setSize(
             (canvasWidth * Config.SIZE + canvasWidth * Config.SPACE).toInt() + 200,
             (canvasHeight * Config.SIZE + canvasHeight * Config.SPACE).toInt() + 200
@@ -169,10 +169,9 @@ class MainSketch : PApplet() {
             ?.map { it.absoluteFile }
             ?: return
 
-        if (liveScripts.isNotEmpty()) {
-            println("Available files:\n ${liveScripts.joinToString(separator = "\n") { "\t${it.name}" }}")
-        } else {
+        if (liveScripts.isEmpty()) {
             println("No available files")
+            return
         }
 
         synchronized(lock) {
@@ -191,7 +190,7 @@ class MainSketch : PApplet() {
         fileWatcher.watchPath(
             File(Config.GENERATORS_DIR).toPath(),
             onCreate = {
-                println("💥 New script available: ${it.name}")
+                println("🔥 New script available: ${it.name}")
                 loadScript(it, canvasWidth, canvasHeight)
             },
             onModify = {
