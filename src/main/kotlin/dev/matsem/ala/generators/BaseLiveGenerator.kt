@@ -50,4 +50,13 @@ abstract class BaseLiveGenerator {
         patch(sink)
         sinkedUGens.add(this)
     }
+
+    /**
+     * Patches [UGen] to provided [ugen] instance and returns this [UGen].
+     * This method is different to UGen.patch(...) method, which, on other side returns the other [UGen]
+     * being patched to (for chaining purposes).
+     */
+    fun <T : UGen> T.patchedTo(ugen: UGen.UGenInput) = apply {
+        patch(ugen)
+    }
 }

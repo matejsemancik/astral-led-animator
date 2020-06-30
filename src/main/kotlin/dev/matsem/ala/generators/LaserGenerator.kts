@@ -1,23 +1,34 @@
-package dev.matsem.ala.generators
 
+import ddf.minim.UGen
 import ddf.minim.ugens.Oscil
-import ddf.minim.ugens.Sink
-import ddf.minim.ugens.Summer
 import ddf.minim.ugens.Waves
+import dev.matsem.ala.generators.BaseLiveGenerator
 import dev.matsem.ala.model.BlendMode
 import dev.matsem.ala.model.GeneratorResult
 import dev.matsem.ala.tools.extensions.*
-import processing.core.PApplet
 
-class LaserGenerator(sketch: PApplet, sink: Sink, w: Int, h: Int) : BaseGenerator(sketch, sink, w, h) {
+object : BaseLiveGenerator() {
 
-    private val oscil = Oscil(1f, 1f, Waves.SAW).sinked()
-    val frequency = Summer().patchedTo(oscil.frequency)
-    val amplitude = Summer().patchedTo(oscil.amplitude)
-    val beamWidth = Summer().sinked()
-    val hue = Summer().sinked()
-    val fading = Summer().sinked()
-    val mod = Summer().sinked()
+    override val enabled = true
+
+    lateinit var oscil: Oscil
+    lateinit var frequency: UGen
+    lateinit var amplitude: UGen
+    lateinit var beamWidth: UGen
+    lateinit var hue: UGen
+    lateinit var fading: UGen
+    lateinit var mod: UGen
+
+    override fun onPatch() {
+        super.onPatch()
+        oscil = Oscil(1f, 1f, Waves.SAW).sinked()
+        frequency = patchBox.knob1.patchedTo(oscil.frequency)
+        amplitude = patchBox.knob2.patchedTo(oscil.amplitude)
+        beamWidth = patchBox.knob3.sinked()
+        hue = patchBox.knob4.sinked()
+        fading = patchBox.slider1.sinked()
+        mod = patchBox.slider2.sinked()
+    }
 
     override fun generate(): GeneratorResult {
         val beamWidth = beamWidth.value.toInt().constrain(low = 1)

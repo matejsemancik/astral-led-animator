@@ -67,7 +67,7 @@ class MainSketch : PApplet() {
     override fun setup() {
         surface.setTitle("Astral LED Animator")
         surface.setResizable(true)
-        surface.setAlwaysOnTop(false)
+        surface.setAlwaysOnTop(true)
         surface.setSize(
             (canvasWidth * Config.SIZE + canvasWidth * Config.SPACE).toInt() + 200,
             (canvasHeight * Config.SIZE + canvasHeight * Config.SPACE).toInt() + 200
