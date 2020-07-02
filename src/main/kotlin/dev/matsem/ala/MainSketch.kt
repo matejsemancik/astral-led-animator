@@ -106,15 +106,14 @@ class MainSketch : PApplet() {
 
     private fun drawLayerPreviews() {
         pushPop {
-            scale(2f)
             gens
                 .values
                 .filter { it.isEnabled }
-                .mapNotNull { it.result }
                 .forEachIndexed { i, layer ->
+                    val ui = layer.generateUi()
                     pushPop {
-                        translate(16f, 16f + (i * 8f))
-                        image(layer.graphics, 0f, 0f)
+                        translate(16f, 16f + (i * ui.height) + (i * 8f))
+                        image(ui, 0f, 0f)
                     }
                 }
         }

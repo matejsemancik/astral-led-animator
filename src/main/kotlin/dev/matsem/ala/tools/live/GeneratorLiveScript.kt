@@ -4,10 +4,14 @@ import ddf.minim.AudioInput
 import ddf.minim.ugens.Sink
 import dev.matsem.ala.generators.BaseLiveGenerator
 import dev.matsem.ala.model.GeneratorResult
+import dev.matsem.ala.tools.extensions.colorModeHSB
+import dev.matsem.ala.tools.extensions.draw
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import processing.core.PApplet
+import processing.core.PConstants
+import processing.core.PGraphics
 import java.io.File
 
 class GeneratorLiveScript(
@@ -22,11 +26,14 @@ class GeneratorLiveScript(
 
     private val lock = Any()
     private var script: BaseLiveGenerator? = null
+    private val ui: PGraphics = sketch.createGraphics(w * 2, h * 2 + 16, PConstants.P2D)
 
     var isEnabled: Boolean = true
     var result: GeneratorResult? = null
+    private var dirty: Boolean = false
 
     fun reload() {
+        dirty = true
         GlobalScope.launch(Dispatchers.Default) {
             val loadedGen = ScriptLoader().loadScript<BaseLiveGenerator>(file)
             loadedGen.init(sketch, sink, lineIn, patchBox, w, h)
@@ -37,6 +44,8 @@ class GeneratorLiveScript(
 
                 script = loadedGen
             }
+
+            dirty = false
         }
     }
 
@@ -52,6 +61,28 @@ class GeneratorLiveScript(
         safeEval {
             script?.onUnpatch()
         }
+    }
+
+    fun generateUi(): PGraphics {
+        ui.draw {
+            colorModeHSB()
+            clear()
+
+            val titleColor = if (dirty) {
+                color(20f, 100f, 100f)
+            } else {
+                color(0f, 0f, 100f)
+            }
+            textSize(12f)
+            noStroke()
+            fill(titleColor)
+            text(file.name, 0f, 12f)
+            result?.let {
+                image(it.graphics, 0f, 16f, w * 2f, h * 2f)
+            }
+        }
+
+        return ui
     }
 }
 

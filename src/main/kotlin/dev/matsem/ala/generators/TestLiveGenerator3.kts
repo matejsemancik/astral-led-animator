@@ -15,7 +15,7 @@ object : BaseLiveGenerator() {
     override fun onPatch() {
         super.onPatch()
         oscil2 = Oscil(0.01f, 1f, Waves.SINE).sinked()
-        oscil3 = Oscil(0.1f, 1f, Waves.SINE).sinked()
+        oscil3 = Oscil(0.01f, 1f, Waves.SINE).sinked()
     }
 
     override fun generate(): GeneratorResult {
@@ -28,6 +28,6 @@ object : BaseLiveGenerator() {
             circle(0f, 0f, oscil3.value * width)
         }
 
-        return GeneratorResult(canvas, BlendMode.ADD)
+        return GeneratorResult(canvas, BlendMode.EXCLUSION)
     }
 }
