@@ -9,8 +9,6 @@ import dev.matsem.ala.tools.extensions.*
 
 object : BaseLiveGenerator() {
 
-    override val enabled = true
-
     lateinit var oscil: Oscil
     lateinit var frequency: UGen
     lateinit var amplitude: UGen

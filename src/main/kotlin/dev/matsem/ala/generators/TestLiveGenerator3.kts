@@ -1,4 +1,3 @@
-
 import ddf.minim.ugens.Oscil
 import ddf.minim.ugens.Waves
 import dev.matsem.ala.generators.BaseLiveGenerator
@@ -8,8 +7,6 @@ import dev.matsem.ala.tools.audio.FFTListener
 import dev.matsem.ala.tools.extensions.*
 
 object : BaseLiveGenerator() {
-
-    override val enabled = false
 
     lateinit var oscil2: Oscil
     lateinit var oscil3: Oscil

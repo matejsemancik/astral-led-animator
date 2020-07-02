@@ -14,8 +14,6 @@ import processing.core.PConstants
 
 object : BaseLiveGenerator() {
 
-    override val enabled = false
-
     lateinit var fading: UGen
     lateinit var hue: UGen
 

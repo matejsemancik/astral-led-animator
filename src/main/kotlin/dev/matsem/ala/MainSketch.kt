@@ -3,17 +3,12 @@ package dev.matsem.ala
 import ch.bildspur.artnet.ArtNetClient
 import ddf.minim.Minim
 import ddf.minim.ugens.Sink
-import dev.matsem.ala.generators.BaseLiveGenerator
-import dev.matsem.ala.model.GeneratorResult
 import dev.matsem.ala.tools.dmx.ArtnetPatch
 import dev.matsem.ala.tools.extensions.*
 import dev.matsem.ala.tools.kontrol.KontrolF1
 import dev.matsem.ala.tools.live.FileWatcher
+import dev.matsem.ala.tools.live.GeneratorLiveScript
 import dev.matsem.ala.tools.live.PatchBox
-import dev.matsem.ala.tools.live.ScriptLoader
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import processing.core.PApplet
 import processing.core.PConstants
 import processing.core.PGraphics
@@ -58,7 +53,7 @@ class MainSketch : PApplet() {
     // region Core stuff
     private lateinit var mainCanvas: PGraphics
     private val lock = Any()
-    private val generators = mutableMapOf<File, BaseLiveGenerator>()
+    private val gens = mutableMapOf<File, GeneratorLiveScript>()
     private val fileWatcher = FileWatcher()
     // endregion
 
@@ -85,9 +80,10 @@ class MainSketch : PApplet() {
         updatePatchBox()
         background(0f, 0f, 10f)
 
-        val layers = generateLayers()
-        renderMainCanvas(layers)
-        drawLayerPreviews(layers)
+        gens.forEach { (_, gen) -> gen.update() }
+
+        renderMainCanvas()
+        drawLayerPreviews()
 
         drawMainPreview()
 
@@ -96,35 +92,31 @@ class MainSketch : PApplet() {
         }
     }
 
-    private fun generateLayers() = generators
-        .filter { it.value.enabled }
-        .map {
-            val gen = it.value
-            try {
-                gen.generate()
-            } catch (t: Throwable) {
-                t.printStackTrace()
-                null
-            }
-        }.filterNotNull()
-
-    private fun renderMainCanvas(layers: List<GeneratorResult>) = mainCanvas.draw {
+    private fun renderMainCanvas() = mainCanvas.draw {
         clear()
         colorModeHSB()
-        layers.forEach {
-            blend(it.graphics, 0, 0, it.graphics.width, it.graphics.height, 0, 0, width, height, it.blendMode.id)
-        }
+        gens
+            .values
+            .filter { it.isEnabled }
+            .mapNotNull { it.result }
+            .forEach {
+                blend(it.graphics, 0, 0, it.graphics.width, it.graphics.height, 0, 0, width, height, it.blendMode.id)
+            }
     }
 
-    private fun drawLayerPreviews(layers: List<GeneratorResult>) {
+    private fun drawLayerPreviews() {
         pushPop {
             scale(2f)
-            layers.forEachIndexed { i, layer ->
-                pushPop {
-                    translate(16f, 16f + (i * 8f))
-                    image(layer.graphics, 0f, 0f)
+            gens
+                .values
+                .filter { it.isEnabled }
+                .mapNotNull { it.result }
+                .forEachIndexed { i, layer ->
+                    pushPop {
+                        translate(16f, 16f + (i * 8f))
+                        image(layer.graphics, 0f, 0f)
+                    }
                 }
-            }
         }
     }
 
@@ -174,13 +166,7 @@ class MainSketch : PApplet() {
             return
         }
 
-        synchronized(lock) {
-            generators.forEach { (_, gen) ->
-                gen.onUnpatch()
-            }
-            generators.clear()
-        }
-
+        unloadAllScripts()
         liveScripts.forEach { file ->
             loadScript(file, w, h)
         }
@@ -205,26 +191,30 @@ class MainSketch : PApplet() {
     }
 
     private fun loadScript(scriptFile: File, w: Int, h: Int) {
-        GlobalScope.launch(Dispatchers.Default) {
-            val loadedGen = ScriptLoader().loadScript<BaseLiveGenerator>(scriptFile)
-            loadedGen.init(this@MainSketch, sink, lineIn, patchBox, w, h)
-            synchronized(lock) {
-                try {
-                    generators[scriptFile]?.onUnpatch()
-                } catch (t: Throwable) {
-                    t.printStackTrace()
+        synchronized(lock) {
+            gens
+                .getOrPut(scriptFile) {
+                    GeneratorLiveScript(scriptFile, this, sink, lineIn, patchBox, w, h)
                 }
-                generators[scriptFile] = loadedGen
-            }
+                .reload()
         }
     }
 
     private fun unloadScript(scriptFile: File) {
         synchronized(lock) {
-            generators[scriptFile]?.onUnpatch()
-            generators.remove(scriptFile)
+            gens[scriptFile]?.unload()
+            gens.remove(scriptFile)
         }
         println("🗑 Script ${scriptFile.name} unloaded")
+    }
+
+    private fun unloadAllScripts() {
+        synchronized(lock) {
+            gens.forEach { (_, gen) ->
+                gen.unload()
+            }
+            gens.clear()
+        }
     }
 
     private fun updatePatchBox() {

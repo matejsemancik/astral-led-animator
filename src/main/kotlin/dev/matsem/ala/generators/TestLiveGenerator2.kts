@@ -10,8 +10,6 @@ import dev.matsem.ala.tools.extensions.*
 
 object : BaseLiveGenerator() {
 
-    override val enabled = false
-
     lateinit var hue: UGen
     lateinit var contrast: UGen
     lateinit var brightness: UGen
