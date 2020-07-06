@@ -8,7 +8,6 @@ import dev.matsem.ala.tools.extensions.*
 import dev.matsem.ala.tools.kontrol.KontrolF1
 import dev.matsem.ala.tools.live.FileWatcher
 import dev.matsem.ala.tools.live.GeneratorLiveScript
-import dev.matsem.ala.tools.live.PatchBox
 import processing.core.PApplet
 import processing.core.PConstants
 import processing.core.PGraphics
@@ -38,7 +37,6 @@ class MainSketch : PApplet() {
     private val lineIn = minim.lineIn
     private val lineOut = minim.lineOut
     private val sink = Sink().apply { patch(lineOut) }
-    private val patchBox = PatchBox()
     // endregion
 
     // region Art-Net stuff
@@ -77,10 +75,12 @@ class MainSketch : PApplet() {
     }
 
     override fun draw() {
-        updatePatchBox()
         background(0f, 0f, 10f)
 
-        gens.forEach { (_, gen) -> gen.update() }
+        gens.forEach { (_, gen) ->
+            gen.updatePatchBox(kontrol)
+            gen.update()
+        }
 
         renderMainCanvas()
         drawLayerPreviews()
@@ -193,7 +193,7 @@ class MainSketch : PApplet() {
         synchronized(lock) {
             gens
                 .getOrPut(scriptFile) {
-                    GeneratorLiveScript(scriptFile, this, sink, lineIn, patchBox, w, h)
+                    GeneratorLiveScript(scriptFile, this, sink, lineIn, w, h)
                 }
                 .reload()
         }
@@ -214,17 +214,6 @@ class MainSketch : PApplet() {
             }
             gens.clear()
         }
-    }
-
-    private fun updatePatchBox() {
-        patchBox.knob1.setConstant(kontrol.knob1.midiRange(1f))
-        patchBox.knob2.setConstant(kontrol.knob2.midiRange(1f))
-        patchBox.knob3.setConstant(kontrol.knob3.midiRange(1f))
-        patchBox.knob4.setConstant(kontrol.knob4.midiRange(1f))
-        patchBox.slider1.setConstant(kontrol.slider1.midiRange(1f))
-        patchBox.slider2.setConstant(kontrol.slider2.midiRange(1f))
-        patchBox.slider3.setConstant(kontrol.slider3.midiRange(1f))
-        patchBox.slider4.setConstant(kontrol.slider4.midiRange(1f))
     }
 
     /**

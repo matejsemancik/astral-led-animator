@@ -2,6 +2,11 @@ package dev.matsem.ala.tools.kontrol
 
 import themidibus.MidiBus
 
+/**
+ * Abstraction for Traktor Kontrol F1 MIDI controller.
+ * Firmware must be configured properly via NI Controller Editor:
+ * - All pads color must be configured to accept HSB color
+ */
 class KontrolF1 {
 
     companion object {

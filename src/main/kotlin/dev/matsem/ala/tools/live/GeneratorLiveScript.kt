@@ -6,6 +6,8 @@ import dev.matsem.ala.generators.BaseLiveGenerator
 import dev.matsem.ala.model.GeneratorResult
 import dev.matsem.ala.tools.extensions.colorModeHSB
 import dev.matsem.ala.tools.extensions.draw
+import dev.matsem.ala.tools.extensions.midiRange
+import dev.matsem.ala.tools.kontrol.KontrolF1
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -19,7 +21,6 @@ class GeneratorLiveScript(
     private val sketch: PApplet,
     private val sink: Sink,
     private val lineIn: AudioInput,
-    private val patchBox: PatchBox,
     private val w: Int,
     private val h: Int
 ) {
@@ -27,6 +28,7 @@ class GeneratorLiveScript(
     private val lock = Any()
     private var script: BaseLiveGenerator? = null
     private val ui: PGraphics = sketch.createGraphics(w * 2, h * 2 + 16, PConstants.P2D)
+    private val patchBox: PatchBox = PatchBox()
 
     var isEnabled: Boolean = true
     var result: GeneratorResult? = null
@@ -47,6 +49,17 @@ class GeneratorLiveScript(
 
             dirty = false
         }
+    }
+
+    fun updatePatchBox(kontrol: KontrolF1) {
+        patchBox.knob1.setConstant(kontrol.knob1.midiRange(1f))
+        patchBox.knob2.setConstant(kontrol.knob2.midiRange(1f))
+        patchBox.knob3.setConstant(kontrol.knob3.midiRange(1f))
+        patchBox.knob4.setConstant(kontrol.knob4.midiRange(1f))
+        patchBox.slider1.setConstant(kontrol.slider1.midiRange(1f))
+        patchBox.slider2.setConstant(kontrol.slider2.midiRange(1f))
+        patchBox.slider3.setConstant(kontrol.slider3.midiRange(1f))
+        patchBox.slider4.setConstant(kontrol.slider4.midiRange(1f))
     }
 
     fun update() {
